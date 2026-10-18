@@ -1,0 +1,35 @@
+{
+  "_meta": "Flat Slack export for the unseen-sample validation (rev1 backend-generalization).",
+  "users": [
+    {"id": "UN0AAA1", "name": "sana.k", "real_name": "Sana K", "deleted": false},
+    {"id": "UN0BBB2", "name": "mila.r", "real_name": "Mila R", "deleted": false}
+  ],
+  "channels": [
+    {"id": "CN0RISK", "name": "risk-alerts", "created": 1735689600, "is_archived": false},
+    {"id": "CN0TRADE", "name": "trade-ops", "created": 1735689600, "is_archived": false}
+  ],
+  "messages": [
+    {
+      "ts": "1759000000.000100",
+      "type": "message",
+      "user": "UN0AAA1",
+      "channel": "CN0RISK",
+      "text": "Settlement replay double-counted fees again, do not change <@UN0BBB2> without shadow replay."
+    },
+    {
+      "ts": "1759000100.000200",
+      "type": "message",
+      "user": "UN0BBB2",
+      "channel": "CN0TRADE",
+      "text": "Order matching replay drill passed in staging."
+    },
+    {
+      "ts": "1759000200.000300",
+      "type": "message",
+      "user": "UN0BBB2",
+      "channel": "CN0TRADE",
+      "text": "joined the war room",
+      "subtype": "channel_join"
+    }
+  ]
+}

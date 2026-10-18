@@ -1,0 +1,35 @@
+{
+  "expand": "names,schema",
+  "startAt": 0,
+  "maxResults": 50,
+  "total": 2,
+  "issues": [
+    {
+      "id": "10001",
+      "key": "EX-1",
+      "self": "https://example.atlassian.net/rest/api/3/issue/10001",
+      "fields": {
+        "summary": "Renewal discount regression",
+        "status": {"name": "Done", "id": "5"},
+        "created": "2026-03-02T09:15:00.000+0000",
+        "updated": "2026-03-03T10:00:00.000+0000",
+        "project": {"key": "EX", "name": "Example"},
+        "labels": ["applyDiscount"],
+        "components": [{"name": "checkout"}],
+        "comment": {"comments": []}
+      }
+    },
+    {
+      "id": "10002",
+      "key": "EX-2",
+      "self": "https://example.atlassian.net/rest/api/3/issue/10002",
+      "fields": {
+        "summary": "No mapping and no matching label: imports in degraded mode",
+        "status": {"name": "Open", "id": "1"},
+        "created": "2026-04-11T12:00:00.000+0000",
+        "labels": ["unrelated-label"],
+        "project": {"key": "EX", "name": "Example"}
+      }
+    }
+  ]
+}

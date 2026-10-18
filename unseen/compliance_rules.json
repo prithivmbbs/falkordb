@@ -1,0 +1,4 @@
+{
+  "_meta": "Optional override file for the unseen-sample validation. When present, this list is authoritative for compliance_critical_functions: freezeAccount is deliberately NOT listed although company_unseen.json flags it inline, proving the override path works.",
+  "compliance_critical_functions": ["reportRegulator"]
+}

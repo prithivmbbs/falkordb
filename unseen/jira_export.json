@@ -1,0 +1,38 @@
+{
+  "expand": "names,schema",
+  "startAt": 0,
+  "maxResults": 50,
+  "total": 2,
+  "issues": [
+    {
+      "id": "20011",
+      "key": "NJT-7",
+      "self": "https://nova.atlassian.net/rest/api/3/issue/20011",
+      "fields": {
+        "summary": "Settlement replay double-counted fees",
+        "status": {"name": "Done", "id": "5"},
+        "created": "2026-06-14T09:30:00.000+0000",
+        "updated": "2026-06-20T10:00:00.000+0000",
+        "project": {"key": "NJT", "name": "Nova Trade"},
+        "labels": [],
+        "components": [{"name": "settlement"}],
+        "comment": {"comments": []}
+      }
+    },
+    {
+      "id": "20012",
+      "key": "NJT-8",
+      "self": "https://nova.atlassian.net/rest/api/3/issue/20012",
+      "fields": {
+        "summary": "Cold wallet signing key rotation audit",
+        "status": {"name": "Open", "id": "1"},
+        "created": "2026-08-02T11:00:00.000+0000",
+        "updated": "2026-09-01T08:15:00.000+0000",
+        "project": {"key": "NJW", "name": "Nova Wallet"},
+        "labels": ["signColdWalletTransaction"],
+        "components": [{"name": "custody"}],
+        "comment": {"comments": []}
+      }
+    }
+  ]
+}

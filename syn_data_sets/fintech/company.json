@@ -1,0 +1,63 @@
+{
+  "tenants": ["ft_ledger", "ft_kyc"],
+
+  "tenant_names": {
+    "ft_ledger": "FinLedger Core",
+    "ft_kyc": "FinLedger KYC"
+  },
+
+  "teams": [
+    {"id": "ft-core", "name": "Ledger Core", "lead": "nora", "repo": "ft_ledger"},
+    {"id": "ft-kyc", "name": "KYC Platform", "lead": "diego", "repo": "ft_kyc"}
+  ],
+
+  "people": [
+    {"id": "nora", "name": "Nora", "active": true, "team": "ft-core"},
+    {"id": "felix", "name": "Felix", "active": true, "team": "ft-core"},
+    {"id": "greta", "name": "Greta", "active": false, "team": "ft-core", "left_on": "2025-03-10"},
+    {"id": "diego", "name": "Diego", "active": true, "team": "ft-kyc"},
+    {"id": "yuki", "name": "Yuki", "active": true, "team": "ft-kyc"}
+  ],
+
+  "functions": [
+    {"name": "postLedgerEntry", "file": "ledger/post.py", "owner_team": "ft-core", "calls": [], "repo": "ft_ledger"},
+    {"name": "reconcileAccounts", "file": "ledger/reconcile.py", "owner_team": "ft-core", "calls": ["postLedgerEntry"], "repo": "ft_ledger"},
+    {"name": "verifyIdentity", "file": "kyc/verify.py", "owner_team": "ft-kyc", "calls": [], "repo": "ft_kyc"},
+    {"name": "screenTransaction", "file": "kyc/screen.py", "owner_team": "ft-kyc", "calls": ["verifyIdentity"], "repo": "ft_kyc"},
+    {"name": "renderDashboard", "file": "ui/dashboard.py", "owner_team": "ft-core", "calls": [], "repo": "ft_ledger"}
+  ],
+
+  "commits": [
+    {"person": "greta", "function": "postLedgerEntry", "count": 30, "last": "2025-02-14"},
+    {"person": "nora", "function": "postLedgerEntry", "count": 12, "last": "2026-09-20"},
+    {"person": "nora", "function": "reconcileAccounts", "count": 8, "last": "2026-10-01"},
+    {"person": "felix", "function": "reconcileAccounts", "count": 3, "last": "2026-06-10"},
+    {"person": "diego", "function": "verifyIdentity", "count": 15, "last": "2026-09-25"},
+    {"person": "yuki", "function": "screenTransaction", "count": 6, "last": "2026-08-30"},
+    {"person": "felix", "function": "renderDashboard", "count": 10, "last": "2026-09-12"}
+  ],
+
+  "pull_requests": [
+    {"id": "PR-F201", "title": "Ledger: optimize reconciliation batching in reconcileAccounts", "author": "felix", "date": "2026-10-15", "state": "open", "repo": "ft_ledger", "modifies": ["reconcileAccounts"], "reviewers": []},
+    {"id": "PR-F202", "title": "KYC: relax identity verification threshold in verifyIdentity", "author": "diego", "date": "2026-10-14", "state": "open", "repo": "ft_kyc", "modifies": ["verifyIdentity"], "reviewers": []},
+    {"id": "PR-F203", "title": "UI: recolor dashboard header in renderDashboard", "author": "felix", "date": "2026-10-13", "state": "open", "repo": "ft_ledger", "modifies": ["renderDashboard"], "reviewers": []}
+  ],
+
+  "slack": [],
+  "tickets": [],
+  "decisions": [],
+
+  "docs": [
+    {"id": "DOCF-1", "title": "Ledger Reconciliation Runbook", "last_updated": "2026-01-15", "describes": ["reconcileAccounts"], "repo": "ft_ledger"}
+  ],
+
+  "incidents": [
+    {"id": "IF-301", "date": "2026-05-08", "loss_usd": 25000, "summary": "Reconciliation batch double-posted entries after a retry, corrupting 4,200 accounts.", "caused_by_pr": "PR-F190", "affected": ["reconcileAccounts", "postLedgerEntry"], "repo": "ft_ledger"}
+  ],
+
+  "procedures": [
+    {"id": "PF-301", "title": "Ledger Reconciliation Safety Procedure",
+     "steps": ["Verify idempotent entry keys before retry", "Replay against shadow ledger", "Run dual reconciliation before close"],
+     "learned_from": "IF-301", "applies_to": ["reconcileAccounts"], "repo": "ft_ledger"}
+  ]
+}

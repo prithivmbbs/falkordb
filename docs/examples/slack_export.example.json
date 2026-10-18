@@ -1,0 +1,25 @@
+{
+  "users": [
+    {"id": "U0EXAMP01", "name": "dana", "real_name": "Dana Example", "deleted": false}
+  ],
+  "channels": [
+    {"id": "C0EXAMP01", "name": "eng-alerts", "created": 1735689600, "is_archived": false}
+  ],
+  "messages": [
+    {
+      "ts": "1760000000.000100",
+      "type": "message",
+      "user": "U0EXAMP01",
+      "channel": "C0EXAMP01",
+      "text": "Touched applyDiscount without shadow replay and broke renewals again <@U0EXAMP99>."
+    },
+    {
+      "ts": "1760000100.000200",
+      "type": "message",
+      "user": "U0EXAMP01",
+      "channel": "C0EXAMP01",
+      "text": "deleted a duplicated message (skipped as system event)",
+      "subtype": "message_deleted"
+    }
+  ]
+}

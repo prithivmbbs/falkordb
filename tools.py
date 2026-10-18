@@ -31,7 +31,7 @@ def _shortest_per_endpoint(paths: list[dict], end: int) -> list[dict]:
 def assess_blast_radius(function: str, max_hops: int = MAX_HOPS) -> dict:
     """Evaluate blast radius: what breaks if this function changes or is deleted?
     Returns upstream callers, downstream callees, impacted teams, protecting decisions,
-    and associated Jira tickets.
+    associated Jira tickets, and data-driven compliance criticality.
     """
     hops = max(1, min(int(max_hops), MAX_HOPS))
     g = knowledge()
@@ -62,6 +62,18 @@ def assess_blast_radius(function: str, max_hops: int = MAX_HOPS) -> dict:
         "MATCH (t:Ticket)-[:REFERENCES]->(:Function {name:$n}) "
         "RETURN t.id AS id, t.title AS title, t.status AS status", p))
 
+    # rev1 (backend-generalization): compliance criticality is data-driven, not a
+    # hardcoded function-name set. A function is critical when it (or a Decision
+    # that JUSTIFIES it) is flagged `compliance_critical` in the graph.
+    fn_flag = rows(g.ro_query(
+        "MATCH (f:Function {name:$n}) "
+        "RETURN coalesce(f.compliance_critical, false) AS flag", p))
+    critical_decisions = rows(g.ro_query(
+        "MATCH (d:Decision)-[:JUSTIFIES]->(:Function {name:$n}) "
+        "WHERE coalesce(d.compliance_critical, false) = true "
+        "RETURN d.id AS id", p))
+    compliance_critical = bool(fn_flag and fn_flag[0]["flag"]) or bool(critical_decisions)
+
     teams_affected: dict[str, list[str]] = {}
     for t in teams:
         teams_affected.setdefault(t["team"], []).append(t["function"])
@@ -79,6 +91,8 @@ def assess_blast_radius(function: str, max_hops: int = MAX_HOPS) -> dict:
         "teams_affected": teams_affected,
         "protecting_decisions": decisions,
         "impacted_tickets": tickets,
+        "compliance_critical": compliance_critical,
+        "compliance_decisions": [d["id"] for d in critical_decisions],
         "risk_hint": risk_hint,
     }
 
@@ -242,7 +256,7 @@ def block_or_approve_pr(pr_id: str, function: str, decision: str, reviewer_name:
     """Fixer-Agent autonomous governance action:
     1. Sets PR state (e.g. BLOCKED, APPROVED).
     2. Flags connected documentation as is_stale = true.
-    3. Auto-assigns the true domain expert reviewer to the PR.
+    3. Links the true domain expert reviewer when one exists (skipped otherwise).
     """
     decision = decision.upper()
     g_know = knowledge()
@@ -287,12 +301,12 @@ def block_or_approve_pr(pr_id: str, function: str, decision: str, reviewer_name:
         "pr_id": pr_id,
         "status": decision,
         "risk_level": risk_level.upper(),
-        "assigned_reviewer": assigned_user or reviewer_name or "None",
+        "assigned_reviewer": assigned_user or reviewer_name,
         "flagged_stale_docs": pr_res[0]["flagged_stale_docs"] if pr_res else []
     }
 
 
-def get_subgraph_for_visualization(function: str = "applyDiscount", repo: str = "acme_checkout") -> dict:
+def get_subgraph_for_visualization(function: str = "applyDiscount", repo: str = None) -> dict:
     """Extracts nodes and edges formatted for PyVis / NetworkX / interactive web dashboards.
     Highlights blast radius paths, true experts, and decision provenance.
     """

@@ -1,0 +1,4 @@
+{
+  "compliance_critical_functions": ["encryptHealthRecord", "auditAccess"],
+  "compliance_critical_decisions": ["DM-001"]
+}

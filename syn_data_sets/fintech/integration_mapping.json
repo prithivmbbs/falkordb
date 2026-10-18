@@ -1,0 +1,10 @@
+{
+  "slack_to_functions": {"1710001000.000001": ["postLedgerEntry"]},
+  "slack_to_tickets": {},
+  "slack_mentions": {"1710001000.000001": ["greta", "nora"]},
+  "slack_authors": {"1710001000.000001": "nora"},
+  "jira_to_functions": {},
+  "decision_rules": [
+    {"id": "DF-001", "summary": "Ledger entries must retain the double-write guard for audit compliance.", "justifies": ["postLedgerEntry"], "decided_in_slack": ["1710001000.000001"], "decided_in_ticket": [], "compliance_critical": false, "contractual": true}
+  ]
+}

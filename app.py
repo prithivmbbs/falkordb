@@ -568,6 +568,49 @@ SCENARIOS = {
 }
 
 
+# 4.5 Dynamic sidebar options (rev1 backend-generalization): tenant/function lists come
+# from the live graph, falling back to the company input file and finally the bundled
+# Acme demo preset -- so onboarding a new company.json needs no code edits.
+def _load_tenant_functions() -> dict:
+    try:
+        from db import knowledge, rows
+        res = rows(knowledge().ro_query(
+            "MATCH (f:Function) WHERE f.repo IS NOT NULL "
+            "RETURN f.repo AS repo, collect(f.name) AS fns ORDER BY repo"))
+        live = {r["repo"]: sorted(r["fns"] or []) for r in res}
+        if live:
+            return live
+    except Exception:
+        pass
+
+    try:
+        data = json.loads(seed.resolve_input_path().read_text(encoding="utf-8"))
+        options = {t: [] for t in data.get("tenants", [])}
+        for fn in data.get("functions", []):
+            if fn.get("repo") in options:
+                options[fn["repo"]].append(fn.get("name"))
+        options = {t: sorted(n for n in names if n) for t, names in options.items()}
+        if options:
+            return options
+    except Exception:
+        pass
+
+    return {
+        "acme_checkout": ["applyDiscount", "chargeStripeInvoice", "renderCart", "refundOrder",
+                          "rateLimitRedisBucket", "calculateTotal", "checkout", "circuitBreaker"],
+        "acme_auth": ["verifyJwtToken", "rotateSigningKey", "invalidateSessions", "enforceMfaPolicy"],
+        "acme_data": ["exportUserData", "hardDeleteAccount", "encryptPiiField", "auditLogEvent"],
+    }
+
+
+TENANT_FUNCTIONS = _load_tenant_functions()
+
+_PREFIX = os.getenv("GRAPH_PREFIX", "dev")
+_MEMORY_GRAPHS_HTML = ", ".join(
+    f"<code>{_PREFIX}_memory_{t}</code>" for t in TENANT_FUNCTIONS
+)
+
+
 @st.cache_resource
 def get_orchestrator():
     return GovernanceOrchestrator()
@@ -594,7 +637,7 @@ with st.sidebar:
     st.markdown("---")
     st.markdown('<span class="section-tag">// CUSTOM PARAMETERS</span>', unsafe_allow_html=True)
     
-    tenant_options = ["acme_checkout", "acme_auth", "acme_data"]
+    tenant_options = list(TENANT_FUNCTIONS.keys())
     default_tenant_idx = tenant_options.index(current_scenario["tenant"]) if current_scenario["tenant"] in tenant_options else 0
     tenant = st.selectbox(
         "Active Tenant Repository:",
@@ -602,12 +645,9 @@ with st.sidebar:
         index=default_tenant_idx
     )
 
-    if tenant == "acme_checkout":
-        available_fns = ["applyDiscount", "chargeStripeInvoice", "renderCart", "refundOrder", "rateLimitRedisBucket", "calculateTotal", "checkout", "circuitBreaker"]
-    elif tenant == "acme_auth":
-        available_fns = ["verifyJwtToken", "rotateSigningKey", "invalidateSessions", "enforceMfaPolicy"]
-    else:
-        available_fns = ["exportUserData", "hardDeleteAccount", "encryptPiiField", "auditLogEvent"]
+    available_fns = TENANT_FUNCTIONS.get(tenant) or []
+    if not available_fns:
+        available_fns = [current_scenario["function"]]
 
     selected_fn = st.selectbox("Target Function Node:", options=available_fns, index=available_fns.index(current_scenario["function"]) if current_scenario["function"] in available_fns else 0)
     pr_id = st.text_input("Simulated Pull Request ID:", value=current_scenario["pr_id"])
@@ -813,7 +853,7 @@ with tab_synapses:
         st.markdown(f"""
         <div class="neuron-step" style="border-left-color: #3ddfae;">
             <div class="neuron-title" style="color:#3ddfae;">[SYNAPSE 05] CROSS-TENANT ISOLATION</div>
-            Inspecting cross-repo dependencies across <code>dev_memory_acme_checkout</code>, <code>dev_memory_acme_auth</code>, and <code>dev_memory_acme_data</code>.
+            Inspecting cross-repo dependencies across {_MEMORY_GRAPHS_HTML}.
         </div>
         <div class="neuron-step" style="border-left-color: #3ddfae;">
             <div class="neuron-title" style="color:#3ddfae;">[SYNAPSE 06] MULTI-TIER CONSOLIDATION</div>
@@ -971,11 +1011,14 @@ with tab_memory:
     with c_col2:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         st.caption("ALL TENANT MEMORY GRAPHS")
-        st.markdown("""
-        - 🟢 `dev_memory_acme_checkout` *(Active)*
-        - 🔵 `dev_memory_acme_auth` *(Isolated)*
-        - 🟣 `dev_memory_acme_data` *(Isolated)*
-        - 🟡 `dev_agent_state` *(Blackboard)*
+        _memory_bullets = "\n        ".join(
+            f"- {'🟢' if t == sim['repo'] else '🔵'} `{_PREFIX}_memory_{t}` "
+            f"*({'Active' if t == sim['repo'] else 'Isolated'})*"
+            for t in TENANT_FUNCTIONS
+        )
+        st.markdown(f"""
+        {_memory_bullets}
+        - 🟡 `{_PREFIX}_agent_state` *(Blackboard)*
         """)
         st.markdown('</div>', unsafe_allow_html=True)
 
