@@ -260,7 +260,7 @@ NexusGuard doesn't just generate a report. It:
 ## 3-Minute Judge Winning Demo Flow
 
 ### Act 1: The Hook (30 seconds)
-1. Open **http://localhost:8501** featuring the **CRYO-PULSE Cyber-Emerald theme** with floating ambient nodes and glassmorphic HUD.
+1. Open **http://localhost:8501** featuring the clean **Scholar's Parchment UI** (`#faf8f5`) with minimalist floating nodes.
 2. Say: *"Every engineering company has load-bearing legacy code that nobody dares touch. Why? Because the context is lost across Slack threads, departed engineers, and past outages. When an engineer opens a PR today, GitHub and Copilot have no idea what will break. NexusGuard is an autonomous governance brain backed by FalkorDB that fixes this."*
 
 ### Act 2: The Critical Block (60 seconds)

@@ -57,7 +57,7 @@ flowchart TD
     end
 
     subgraph Interfaces ["User & Tool Interfaces"]
-        UI["Streamlit Neural Dashboard<br/>(CRYO-PULSE Theme // Floating Nodes Background)"]
+        UI["Streamlit Governance Dashboard<br/>(Scholar's Parchment // Minimalist Nodes)"]
         MCP["FastMCP Server<br/>(10 Tools exposed over stdio)"]
         API["FastAPI REST Backend"]
     end
@@ -166,7 +166,8 @@ falkordb/
 ├── agents.py             # Scout, Consolidator, and Fixer agents with FalkorDB Blackboard coordination
 ├── api.py                # FastAPI REST endpoints
 ├── mcp_server.py         # FastMCP stdio server (10 tools exposed)
-├── app.py                # Streamlit dashboard (CRYO-PULSE theme, floating nodes background, PyVis canvas)
+├── app.py                # Streamlit dashboard (Perplexity Scholar's Parchment design, minimal nodes)
+├── DESIGN.md             # UI/UX design specifications & token reference
 ├── test_tools.py         # Automated test suite for all 10 tools
 ├── schema.md             # Graph database schema contract & conventions
 ├── walkthrough.md        # Comprehensive walkthrough & pitch script
