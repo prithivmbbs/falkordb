@@ -20,18 +20,40 @@ REPO = os.getenv("REPO_NAME", "acme_checkout")
 INGEST_INPUT_DIR = os.getenv("INGEST_INPUT_DIR", ".")
 
 
+def _get_config(key, default=None):
+    """Retrieve config from st.secrets if available (Streamlit Cloud), else os.environ."""
+    try:
+        import streamlit as st
+        if hasattr(st, "secrets") and key in st.secrets:
+            return str(st.secrets[key])
+    except Exception:
+        pass
+    return os.getenv(key, default)
+
+
 @lru_cache(maxsize=1)
 def client():
     from falkordb import FalkorDB
+
+    # 1. Direct connection URL support (e.g. falkor://default:pass@host:port or falkors://)
+    url = _get_config("FALKORDB_URL", _get_config("FALKOR_URL"))
+    if url:
+        return FalkorDB.from_url(url)
+
+    # 2. Key-value credentials
+    host = _get_config("FALKOR_HOST", _get_config("FALKORDB_HOST", "localhost"))
+    port = int(_get_config("FALKOR_PORT", _get_config("FALKORDB_PORT", "6379")))
+    password = _get_config("FALKOR_PASSWORD", _get_config("FALKORDB_PASSWORD"))
+    username = _get_config("FALKOR_USERNAME", _get_config("FALKORDB_USERNAME"))
+    ssl_flag = str(_get_config("FALKOR_SSL", _get_config("FALKORDB_SSL", "false"))).lower() in ("true", "1", "yes")
+
     kwargs = {
-        "host": os.getenv("FALKOR_HOST", os.getenv("FALKORDB_HOST", "localhost")),
-        "port": int(os.getenv("FALKOR_PORT", os.getenv("FALKORDB_PORT", "6379"))),
+        "host": host,
+        "port": port,
+        "ssl": ssl_flag,
     }
-    username = os.getenv("FALKOR_USERNAME", os.getenv("FALKORDB_USERNAME"))
     if username:
         kwargs["username"] = username
-
-    password = os.getenv("FALKOR_PASSWORD", os.getenv("FALKORDB_PASSWORD"))
     if password:
         kwargs["password"] = password
 
