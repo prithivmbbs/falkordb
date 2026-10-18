@@ -33,25 +33,26 @@ def _get_config(key, default=None):
 
 @lru_cache(maxsize=1)
 def client():
+    import urllib.parse
     from falkordb import FalkorDB
 
     # 1. Direct connection URL support (e.g. falkor://default:pass@host:port or falkors://)
     url = _get_config("FALKORDB_URL", _get_config("FALKOR_URL"))
     if url:
-        return FalkorDB.from_url(
-            url,
-            ssl_cert_reqs="none",
-            ssl_check_hostname=False,
-            socket_timeout=15.0,
-            socket_connect_timeout=15.0
-        )
-
-    # 2. Key-value credentials
-    host = _get_config("FALKOR_HOST", _get_config("FALKORDB_HOST", "localhost"))
-    port = int(_get_config("FALKOR_PORT", _get_config("FALKORDB_PORT", "6379")))
-    password = _get_config("FALKOR_PASSWORD", _get_config("FALKORDB_PASSWORD"))
-    username = _get_config("FALKOR_USERNAME", _get_config("FALKORDB_USERNAME"))
-    ssl_flag = str(_get_config("FALKOR_SSL", _get_config("FALKORDB_SSL", "false"))).lower() in ("true", "1", "yes")
+        is_ssl = url.startswith("falkors://") or url.startswith("rediss://")
+        parsed = urllib.parse.urlparse(url)
+        host = parsed.hostname or "localhost"
+        port = parsed.port or 6379
+        username = parsed.username
+        password = parsed.password
+        ssl_flag = is_ssl
+    else:
+        # 2. Key-value credentials
+        host = _get_config("FALKOR_HOST", _get_config("FALKORDB_HOST", "localhost"))
+        port = int(_get_config("FALKOR_PORT", _get_config("FALKORDB_PORT", "6379")))
+        password = _get_config("FALKOR_PASSWORD", _get_config("FALKORDB_PASSWORD"))
+        username = _get_config("FALKOR_USERNAME", _get_config("FALKORDB_USERNAME"))
+        ssl_flag = str(_get_config("FALKOR_SSL", _get_config("FALKORDB_SSL", "false"))).lower() in ("true", "1", "yes")
 
     kwargs = {
         "host": host,
