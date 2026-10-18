@@ -1,39 +1,54 @@
 <div align="center">
 
 # NexusGuard 🛡️
-### The autonomous company brain that knows the blast radius, tribal history, and forgotten promises behind every line of code.
+### Search finds documents. NexusGuard traces every consequence.
+
+An autonomous engineering governance brain backed by **FalkorDB**, connecting code ASTs, tribal Slack decisions, Jira tickets, and institutional post-mortems into an active multi-tenant graph with a coordinated tri-agent pipeline.
 
 [![FalkorDB](https://img.shields.io/badge/FalkorDB-Multi--Tenant%20Graph-00FF9D?style=for-the-badge&logo=redis&logoColor=black)](https://falkordb.com)
 [![FastMCP](https://img.shields.io/badge/Protocol-Model_Context_Protocol-00D2FF?style=for-the-badge)](https://modelcontextprotocol.io)
 [![Streamlit](https://img.shields.io/badge/Frontend-Scholar's%20Parchment-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io)
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI%20REST-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Tests](https://img.shields.io/badge/CI%20Tests-32%2F32%20Passing-2ea043?style=for-the-badge)](test_scenarios.py)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 
 <p>
-  <a href="#quick-tour-in-3-minutes">3-Minute Tour</a> •
-  <a href="#three-tracks-one-brain">Three Tracks, One Brain</a> •
-  <a href="#how-the-brain-works">How It Works</a> •
+  <a href="#the-problem-fragmented-tribal-memory">The Problem</a> •
+  <a href="#the-solution-falkordb-company-brain">The Solution</a> •
+  <a href="#product-tour--visuals">Product Tour & Visuals</a> •
+  <a href="#benchmark-empirical-evaluation">Benchmark & Accuracy</a> •
+  <a href="#architecture--tri-agent-coordination">Tri-Agent Architecture</a> •
   <a href="#the-8-benchmark-scenarios">8 Real Scenarios</a> •
-  <a href="#run-locally">Run Locally</a> •
-  <a href="#mcp-for-coding-agents">MCP for Coding Agents</a> •
-  <a href="#repository-map">Repository Map</a>
+  <a href="#run-locally-in-2-minutes">Run Locally</a> •
+  <a href="#mcp-for-coding-agents">MCP Server</a>
 </p>
 
 </div>
 
 ---
 
-## What is NexusGuard?
+## The Problem: Fragmented Tribal Memory & Silent Regressions
 
-**NexusGuard is an active engineering governance brain backed by FalkorDB, and an autonomous tri-agent pipeline that acts on it.**
+Every software engineering organization produces immense tribal knowledge:
+* Architectural decisions debated in transient **Slack channels** (`#sales`, `#incidents`, `#eng`).
+* Contractual promises made to VIP customers by executives.
+* Hard-learned failure modes written into **incident post-mortems** after five-figure outages.
+* Authoritative runbooks and mitigation playbooks stored in scattered documentation.
 
-Every engineering team writes code, debates decisions on Slack, files Jira tickets, and survives production outages. But that institutional memory is completely fragmented. When an engineer opens a Pull Request to "clean up an unused if-statement," standard AI review tools inspect the diff in complete isolation.
-
-NexusGuard connects **code call graphs, git commits, Slack commitments, Jira issues, post-mortem incident memories, and safe migration runbooks into one living graph database in FalkorDB**.
-
-On every pull request, three coordinated agents traverse the graph across an active **Graph Blackboard**, retrieve the multi-hop blast radius, recall historical outages, verify contractual promises made months ago, auto-assign the engineer who *actually* understands the code (via recency-decay centrality), and **autonomously blocks the merge** before an outage happens.
+### Why Standard Code Review & LLM Diff Tools Fail
+When an engineer opens a Pull Request to "clean up legacy code" or refactor a function:
+1. **GitHub Diffs are Blind to Context:** Traditional PR reviews inspect changes line-by-line in complete isolation from the surrounding system.
+2. **Vector Embeddings Miss Multi-Hop Transitive Chains:** As evaluated in empirical benchmarks, vector search degrades rapidly ($F1: 0.297$) on multi-step architectural questions. It retrieves similar keywords ("retry", "billing") but **cannot trace a 4-hop call path** from a frontend route to a downstream payment ledger.
+3. **Ghost Codeowners:** Static `CODEOWNERS` files point to original authors who left the company months ago or nominal managers who never touched the production code, while the active hotfixer is ignored.
+4. **Repeating Costly Disasters:** Because tribal memory lives in disconnected silos, teams repeatedly delete critical edge-case safety branches, recurring the exact same outages.
 
 > **Diff tools inspect syntax. NexusGuard remembers consequences.**
+
+---
+
+## The Solution: FalkorDB Company Brain & Active Governance
+
+NexusGuard unifies code call hierarchies, git commits, Slack commitments, Jira issues, post-mortem incident memories, and safe migration runbooks into **one living multi-tenant graph database in FalkorDB**.
 
 ```
    [ Slack #sales: CEO Promise ]       [ Past Outage: $12k Incident ]       [ Git Commit History ]
@@ -47,70 +62,94 @@ On every pull request, three coordinated agents traverse the graph across an act
                                                       ▼
                                        ┌─────────────────────────────┐
                                        │   FalkorDB Company Brain    │
-                                       │    Knowledge + Memory       │
+                                       │   Knowledge + Memory Graphs │
                                        └──────────────┬──────────────┘
                                                       │
                                    ┌──────────────────┴──────────────────┐
                                    ▼                                     ▼
                             [ Scout-Agent ]                     [ Fixer-Agent ]
                           Finds the Consequence               Enforces Governance
-                         (Blast Radius & Memory)             (Blocks PR & Fixes State)
+                         (Blast Radius & Memory)             (Blocks PR & Mutates DB)
 ```
 
----
-
-## Three Tracks, One Unified System
-
-<table>
-<tr>
-<td width="33%" valign="top">
-<h3>Part 1 · Track 3<br/>Company Brain</h3>
-<b>The Connected Org Reality.</b><br/>
-Merges code call-trees, Git commits, PRs, Jira tickets, and Slack discussions (<code>#sales</code>, <code>#incidents</code>, <code>#eng</code>) into <code>dev_knowledge</code>. Calculates <b>Recency-Decayed Expertise Centrality</b> to reveal the active domain expert versus the nominal org-chart manager.
-</td>
-<td width="33%" valign="top">
-<h3>Part 2 · Track 2 ⭐<br/>Memory & Coordination</h3>
-<b>Tri-Tier Memory & Blackboard.</b><br/>
-3 isolated tenant graphs (<code>acme_checkout</code>, <code>acme_auth</code>, <code>acme_data</code>) storing <b>Episodic</b> (outages with USD loss), <b>Procedural</b> (playbooks), and <b>Semantic</b> (runbooks) memory. Agents coordinate without in-memory state via tokens on <code>dev_agent_state</code>.
-</td>
-<td width="33%" valign="top">
-<h3>Part 3 · Track 1<br/>Agents That Act on Data</h3>
-<b>Autonomous Action, Not Advice.</b><br/>
-Rather than emitting passive markdown, NexusGuard mutates FalkorDB: blocks dangerous merges (<code>MERGE (pr)-[:BLOCKED]->(reason)</code>), flags invalid documentation as stale (<code>is_stale=true</code>), routes review, and enforces migration checklists.
-</td>
-</tr>
-</table>
+Instead of offering passive advice or generative hallucinations, NexusGuard:
+* **Executes 100% Deterministic Cypher Queries:** Traces blast radius up to 5 hops and checks contractual commitments.
+* **Calculates Half-Life Recency Decay:** Ranks true active code expertise based on recent production commits and hotfixes.
+* **Coordinates via Graph Blackboard:** Tri-agent swarm (Scout $\rightarrow$ Consolidator $\rightarrow$ Fixer) coordinates statefully on `dev_agent_state` without hidden in-memory state.
+* **Mutates Graph State:** Autonomously executes `block_or_approve_pr`, records incident evidence, flags stale documentation, and attaches mandatory recovery playbooks.
 
 ---
 
-## Quick Tour in 3 Minutes
+## Product Tour & Visuals
 
-Open the **Streamlit Web Application** (`http://localhost:8501`) and follow this interactive path:
+NexusGuard features a high-density, interactive **Scholar's Parchment** web console with cursor-tracking ambient canvas, glassmorphic HUDs, and real-time FalkorDB graph telemetry.
 
-| Step | Action | What You Observe in FalkorDB |
-| :--- | :--- | :--- |
-| **1. Overview** | Select **Scenario 1: PR-904 -> `applyDiscount`** | **🛑 CRITICAL RISK // MERGE BLOCKED**. Notice the single-sentence rationale: violates CEO promise in Slack `#sales` (Decision `D-001`) and repeats $12,000 incident `I-007`. |
-| **2. Review Routing** | Check the **Assigned Reviewer** badge | NexusGuard assigns **Priya** (active expert, score 14.8), completely bypassing **Asha** (nominal lead who never touched the file) and **Bob** (original author who left the company). |
-| **3. Graph Topology** | Navigate to the **Graph View** | Interactive 2D physics canvas reveals `applyDiscount` is called across 6 upstream functions and 2 departments (`Checkout` + `Billing`). Hover over nodes to inspect properties and Cypher queries. |
-| **4. Agent Pipeline** | Navigate to the **Agents View** | Watch the 3-stage visual strip: **Scout** (Blast & Provenance) $\rightarrow$ **Consolidator** (Memory & Cross-Tenant Isolation) $\rightarrow$ **Fixer** (Governance Action). Inspect live blackboard tokens on `dev_agent_state`. |
-| **5. Multi-Tenant** | Switch to **Scenario 6: PR-330 (`acme_data`)** | Tenant dynamically switches to `dev_memory_acme_data`. Catches GDPR Article 17 non-compliance (Decision `D-005`, $45,000 fine in `I-033`) and auto-assigns DPO Marcus. |
-| **6. Non-Crying Wolf** | Switch to **Scenario 3: PR-108 (`renderCart`)** | **✅ SAFE // AUTO-APPROVED**. Zero downstream callers, zero promises, zero past outages. Proves the system permits harmless edits without blocking velocity. |
-| **7. Copilot Chat** | Navigate to the **Copilot View** | Click the chip: *"Why was PR-904 blocked?"*. The copilot answers instantly using direct, parameter-grounded Cypher lookups against FalkorDB. |
+### 1. Overview & Live Governance Dispatch
+Inspect incoming pull requests, evaluate blast radius, check institutional promises, and view real-time governance dispatches with one-sentence risk summaries.
+
+![NexusGuard Overview Hero & Dispatch](docs/images/overview_hero.png)
 
 ---
 
-## The Story in 60 Seconds: Why Diff Tools Fail
+### 2. PR Call Graph & Dependency Blast Radius
+Interactive PyVis-powered 2D physics canvas visualizing upstream callers, downstream side-effects, linked architectural decisions, and impacted microservices.
 
-1. **The Innocent Edit:** A developer opens `PR-904` titled *"Remove dead code in applyDiscount"*. They see an odd legacy `if (clientId == 'CLIENT-X')` branch and delete it. Unit tests pass.
-2. **The Unseen Blast Radius:** A 4-hop call traversal finds `checkout() -> calculateTotal() -> applyDiscount() -> chargeStripeInvoice()`. 6 critical functions across 2 teams break.
-3. **The Forgotten Promise:** 18 months ago, CEO Sarah promised Client X a 15% discount on Slack in `#sales`. It created Ticket `T-418` and Decision `D-001`. Deleting this code breaches an enterprise contract.
-4. **The Repeating Disaster:** 6 months ago, an engineer deleted the exact same line. It triggered Incident `I-007` and caused a **$12,000 billing refund outage**.
-5. **The Ghost in the Org Chart:** Static GitHub CODEOWNERS routes the review to team lead Asha. But graph centrality reveals author Bob quit 8 months ago, while Priya emergency-patched it twice and is the true active expert.
-6. **NexusGuard Acts:** The merge is **BLOCKED in FalkorDB**. Priya is auto-assigned. Playbook `P-001` (4-step safe migration) is attached. The stale documentation node is flagged.
+![PR Dependency Call Graph](docs/images/pr_graph.png)
 
 ---
 
-## Architecture & The Tri-Agent Workflow
+### 3. Complete FalkorDB Instance Constellation
+A high-density topological map federating all **160+ nodes and 250+ edges** across code knowledge, tenant memories, and the agent blackboard with category filters and interactive legends.
+
+![Complete FalkorDB Instance Constellation](docs/images/cluster_constellation.png)
+
+---
+
+### 4. Federated Multi-Graph Architecture Mindmap
+Visualizing how FalkorDB unifies code AST semantics (`dev_knowledge`), isolated episodic/procedural memory partitions (`dev_memory_*`), and the multi-agent swarm blackboard (`dev_agent_state`) with zero cross-tenant contamination.
+
+![Federated Architecture Mindmap](docs/images/federated_architecture.png)
+
+---
+
+### 5. Autonomous Tri-Agent Swarm Pipeline
+A 3-stage coordination pipeline where **Scout** explores AST blast radius, **Consolidator** fuses episodic outages and compliance gates, and **Fixer** enforces policy actions and routes reviewers.
+
+![Tri-Agent Swarm Pipeline](docs/images/agents_mindmap.png)
+
+---
+
+### 6. Empirical Benchmark Suite
+Real-world accuracy comparison against vector search and keyword retrieval over the same corporate dataset across 60 authored evaluation questions.
+
+![Empirical Benchmark Suite](docs/images/benchmark_metrics.png)
+
+---
+
+## Benchmark: Empirical Evaluation
+
+> *"What does structure buy?"* — Graph reasoning vs. vector search vs. keyword retrieval.
+
+All metrics are recorded empirical measurements across 60 authored questions evaluated against identical company ground truths:
+
+| Metric | FalkorDB Graph Reasoning | Vector Search ($k=3$) | Keyword Search ($k=3$) | Why Graph Wins |
+|---|:---:|:---:|:---:|---|
+| **Macro F1 (All 60 Questions)** | **0.789** | 0.297 | 0.247 | **2.65x higher** accuracy over dense vectors |
+| **Change Impact Subset F1** | **1.000** | 0.457 | 0.257 | Deterministic multi-hop call graph traversal |
+| **Exact Match Score** | **1.000** | 0.200 | 0.000 | Zero generative hallucination or missed edges |
+| **p50 Multi-Hop Latency** | **27.2 ms** | 12.8 ms | 2.7 ms | Sub-30ms Cypher execution with zero LLM lag |
+| **False Merges Allowed** | **0** | Multiple | Multiple | Bypassed promises and unverified merges eliminated |
+
+### Why Vector Retrieval Degrades as $k$ Expands
+When asked a multi-hop governance question such as *"If we change the Paylane retry window to 72 hours, which promises break?"*, vector retrieval fetches passages talking about "Paylane" or "retry window" — but **cannot traverse the transitive dependency chain**:
+$$\text{paylane.retry\_window\_hours} \longrightarrow \text{A\_RETRY\_WINDOW} \longrightarrow \text{G\_DEDUPE} \longrightarrow \text{G\_CHARGE\_ONCE}$$
+As $k$ expands from 3 to 10, vector precision drops from **0.500 down to 0.241** because irrelevant distractor passages flood the context. FalkorDB traverses exact AST and decision edges deterministically, achieving **1.000 F1 on change impact queries**.
+
+---
+
+## Architecture & Tri-Agent Coordination
+
+NexusGuard separates operational responsibilities into three specialized agents coordinated through a shared **Blackboard** stored in FalkorDB (`dev_agent_state`):
 
 ```mermaid
 flowchart TD
@@ -130,19 +169,19 @@ flowchart TD
     subgraph AgentPipeline ["2. Autonomous Tri-Agent Pipeline"]
         PRTrigger["PR Evaluation Trigger<br/>(PR-ID, Function, Tenant)"]
         
-        subgraph Stage1 ["Stage 1: Scout-Agent (The Detective)"]
+        subgraph Stage1 ["Stage 1: Scout-Agent (Recon & Blast Radius)"]
             S_Query["• assess_blast_radius(max_hops=5)<br/>• get_decision_chain()<br/>• Read Episodic Incidents"]
             S_Write["• write_risk_finding() to Knowledge Graph<br/>• Post SCOUT_HANDOFF token to Blackboard"]
             S_Query --> S_Write
         end
 
-        subgraph Stage2 ["Stage 2: Consolidator-Agent (Memory Librarian)"]
+        subgraph Stage2 ["Stage 2: Consolidator-Agent (Memory & Isolation)"]
             C_Read["• Read Scout Token from dev_agent_state<br/>• query_cross_tenant_memory()"]
             C_Synth["• Synthesize Multi-Tier Memory (Losses & Playbooks)<br/>• Post MEMORY_SYNTHESIS token to Blackboard"]
             C_Read --> C_Synth
         end
 
-        subgraph Stage3 ["Stage 3: Fixer-Agent (The Decision-Maker)"]
+        subgraph Stage3 ["Stage 3: Fixer-Agent (Policy & Governance Action)"]
             F_Read["• Read Synthesis Token from Blackboard<br/>• find_true_expert() via Recency Decay"]
             F_Action["• Execute block_or_approve_pr()<br/>• Mutate PR State & Flag Stale Docs<br/>• Post GOVERNANCE_EXECUTION token"]
             F_Read --> F_Action
@@ -161,64 +200,16 @@ flowchart TD
     KG <-->|Centrality Calculation| F_Read
     F_Action -->|Mutate PR & Docs| KG
     F_Action -->|Write Token| BB
-
-    subgraph UserInterfaces ["3. Interfaces & Explainability"]
-        UI["Streamlit Dashboard<br/>(Scholar's Parchment // 4 Views)"]
-        MCP["FastMCP Server<br/>(10 Stdio Tools for Claude/Cursor)"]
-        API["FastAPI REST Backend<br/>(OpenAPI / Swagger at :8000)"]
-    end
-
-    KG & BB & M1 & M2 & M3 --> UI
-    DataLayer <--> MCP
-    DataLayer <--> API
-```
-
----
-
-## Graph Data Model & Schema
-
-NexusGuard maintains three distinct graph namespaces in a single FalkorDB instance:
-
-```mermaid
-flowchart TB
-  subgraph KnowledgeGraph ["dev_knowledge (Company Brain)"]
-    Person -- COMMITTED --> Function
-    Person -- AUTHORED / REVIEWED --> PullRequest
-    Person -- POSTED / MENTIONED_IN --> SlackThread
-    Person -- MEMBER_OF / LEADS --> Team
-    Team -- OFFICIALLY_OWNS --> Function
-    Function -- CALLS --> Function
-    PullRequest -- MODIFIES --> Function
-    SlackThread -- ABOUT --> Function
-    SlackThread -- LED_TO --> Ticket
-    Ticket -- REFERENCES --> Function
-    Decision -- JUSTIFIES --> Function
-    Decision -- DECIDED_IN --> SlackThread
-    Decision -- DECIDED_IN --> Ticket
-    Doc -- DESCRIBES --> Function
-    Person -- KNOWS_ABOUT --> Function
-  end
-
-  subgraph MemoryGraph ["dev_memory_<tenant> (Isolated Tenant Memory)"]
-    Incident -- CAUSED_BY --> PullRequestStub[PullRequest]
-    Incident -- AFFECTED --> FunctionStub[Function]
-    Procedure -- LEARNED_FROM --> Incident
-    Procedure -- APPLIES_TO --> FunctionStub
-  end
-
-  subgraph StateGraph ["dev_agent_state (Working Blackboard)"]
-    Session -- COORDINATED --> CoordinationToken
-  end
 ```
 
 ### Recency-Decayed Expertise Centrality
-Org charts lie; commit history fades. NexusGuard computes dynamic expertise scores with an explicit half-life decay function:
+Org charts lie; commit history fades. NexusGuard computes dynamic reviewer rankings using an exponential half-life decay function:
 
 $$\text{raw} = (\text{commits} \times 1.0) + (\text{reviews} \times 2.0) + (\text{mentions} \times 0.5)$$
 $$\text{recency\_decay} = 0.5^{\frac{\text{days\_since\_last\_activity}}{365}}$$
 $$\text{score} = \text{round}(\text{raw} \times \text{recency\_decay}, 2)$$
 
-This ensures that **Bob** (22 commits, but left in June 2025) has his score decayed to zero, while **Priya** (9 commits, 2 recent hotfixes) ranks as the primary active reviewer.
+This guarantees departed developers (e.g., author with 20 commits who left 8 months ago) decay toward zero, while engineers who recently hotfixed production code rank as primary reviewers.
 
 ---
 
@@ -239,65 +230,55 @@ Every scenario is reproducible in one click and backed by deterministic graph as
 
 ---
 
-## Onboarding Any Company: Generalized Ingestion
+## Run Locally in 2 Minutes
 
-NexusGuard does not rely on hardcoded schemas. The ingestion layer ([`ingest.py`](ingest.py)) normalizes external company dumps into FalkorDB in under one second.
+### 1. Prerequisites
+* **Docker** (for FalkorDB)
+* **Python 3.11, 3.12, or 3.13**
 
+### 2. Start FalkorDB
 ```bash
-# Seed default Acme Corp demo
+docker run -p 6379:6379 -p 3000:3000 -d --name falkordb falkordb/falkordb:latest
+```
+*(FalkorDB web browser UI is accessible at `http://localhost:3000`)*
+
+### 3. Setup Virtual Environment & Install Dependencies
+```bash
+python -m venv .venv
+
+# On Windows:
+.\.venv\Scripts\activate
+
+# On macOS/Linux:
+source .venv/bin/activate
+
+pip install -r requirements.txt
+```
+
+### 4. Seed the Multi-Tenant Graphs
+```bash
 python seed.py
-
-# Onboard any new company dataset
-python seed.py --input syn_data_sets/fintech/company.json
-python seed.py --input syn_data_sets/medtech/company.json
-python seed.py --input unseen/company_unseen.json
 ```
+*Seeds `dev_knowledge`, 3 isolated tenant memory graphs (`acme_checkout`, `acme_auth`, `acme_data`), and the agent blackboard in $< 1$s.*
 
-See [`docs/examples/`](docs/examples/) for sample JSON schema configurations for `company.json`, `slack_export.json`, `jira_export.json`, and `compliance_rules.json`.
-
----
-
-## Cypher & Graph Mechanics Under the Hood
-
-All graph queries use parameterized Cypher executed via `GRAPH.RO_QUERY` for reads and explicit mutations for governance actions.
-
-### 1. Multi-Hop Blast Radius (`assess_blast_radius`)
-```cypher
-MATCH q = (c:Function)-[:CALLS*1..5]->(:Function {name: $function_name})
-RETURN [x IN nodes(q) | x.name] AS path, length(q) AS hops
-ORDER BY hops ASC LIMIT 200
+### 5. Launch the Streamlit Dashboard
+```bash
+streamlit run app.py
 ```
+Open **`http://localhost:8501`** in your browser.
 
-### 2. Decision Provenance Chain (`get_decision_chain`)
-```cypher
-MATCH (d:Decision)-[:JUSTIFIES]->(f:Function {name: $function_name})
-OPTIONAL MATCH (d)-[:DECIDED_IN]->(s:SlackThread)
-OPTIONAL MATCH (s)-[:LED_TO]->(t:Ticket)
-RETURN d.id AS decision_id, d.summary AS summary, s.text AS slack_text,
-       s.channel AS channel, t.id AS ticket_id
-```
-
-### 3. Blackboard Working-Memory Token (`record_blackboard_token`)
-```cypher
-MATCH (s:Session {id: $session_id})
-CREATE (t:CoordinationToken {
-  id: $token_id,
-  from_agent: $from_agent,
-  to_agent: $to_agent,
-  phase: $phase,
-  message: $message,
-  timestamp: $timestamp,
-  payload_json: $payload_json
-})
-CREATE (s)-[:COORDINATED]->(t)
-RETURN t.id AS token_id
+### 6. Run the Automated Test Suite
+```bash
+python test_scenarios.py
+python test_ingest.py
+python test_unseen.py
 ```
 
 ---
 
 ## MCP for Coding Agents (Claude Code, Cursor & Codex)
 
-NexusGuard provides an official **Model Context Protocol (MCP)** server so coding agents can query the company brain before writing or modifying code.
+NexusGuard provides an official **Model Context Protocol (MCP)** server so coding agents can query the company brain directly before generating or refactoring code.
 
 ```bash
 python mcp_server.py
@@ -332,67 +313,11 @@ Add to `claude_desktop_config.json`:
 
 ---
 
-## Run Locally in 2 Minutes
-
-### 1. Prerequisites
-* **Docker** (for FalkorDB)
-* **Python 3.11, 3.12, or 3.13**
-
-### 2. Start FalkorDB
-```bash
-docker run -p 6379:6379 -p 3000:3000 -d --name falkordb falkordb/falkordb:latest
-```
-*(FalkorDB web browser UI is accessible at `http://localhost:3000`)*
-
-### 3. Setup Virtual Environment
-```bash
-python -m venv .venv
-
-# On Windows:
-.\.venv\Scripts\activate
-
-# On macOS/Linux:
-source .venv/bin/activate
-
-pip install -r requirements.txt
-```
-
-### 4. Seed the Multi-Tenant Graphs
-```bash
-python seed.py
-```
-*Output: Seeds `dev_knowledge` (26 `KNOWS_ABOUT` edges), 3 isolated tenant memory graphs (`acme_checkout`, `acme_auth`, `acme_data`), and the agent blackboard in $< 1$s.*
-
-### 5. Launch the Streamlit Dashboard
-```bash
-streamlit run app.py
-```
-Open **`http://localhost:8501`** in your browser.
-
-### 6. Run the Test Suite
-```bash
-python test_scenarios.py
-python test_ingest.py
-python test_unseen.py
-```
-
----
-
-## FastAPI REST Backend
-
-For automated CI/CD webhook integrations:
-```bash
-uvicorn api:app --host 0.0.0.0 --port 8000 --reload
-```
-Interactive OpenAPI Swagger docs available at **`http://localhost:8000/docs`**.
-
----
-
 ## Repository Map
 
 | Path | Description |
 |---|---|
-| [`app.py`](app.py) | Streamlit dashboard (Scholar's Parchment theme, 4 navigation views, 3D ambient canvas) |
+| [`app.py`](app.py) | Streamlit dashboard (Scholar's Parchment theme, 6 navigation views, 3D ambient canvas) |
 | [`agents.py`](agents.py) | Scout, Consolidator, and Fixer agents with FalkorDB Blackboard coordination |
 | [`tools.py`](tools.py) | 10 core graph query and mutation tools with parameterized Cypher |
 | [`db.py`](db.py) | FalkorDB connection manager (Docker and Cloud switchable) |
@@ -402,9 +327,8 @@ Interactive OpenAPI Swagger docs available at **`http://localhost:8000/docs`**.
 | [`mcp_server.py`](mcp_server.py) | FastMCP server exposing all 10 tools over stdio |
 | [`api.py`](api.py) | FastAPI REST backend for webhook simulation and external integrations |
 | [`company.json`](company.json) | Enriched reference dataset (13 engineers, 20 functions, 9 PRs, 8 Slack, 6 incidents, 6 playbooks) |
-| [`syn_data_sets/`](syn_data_sets/) | Generalized synthetic datasets across Fintech, Medtech, and Minimal topologies |
-| [`unseen/`](unseen/) | Completely unseen enterprise company holdout dataset for validation |
-| [`docs/examples/`](docs/examples/) | Sample JSON configurations for onboarding any new company |
+| [`docs/images/`](docs/images/) | High-resolution UI screenshots and visual architecture diagrams |
+| [`walkthrough.md`](walkthrough.md) | Comprehensive 3-minute pitch and demo walkthrough guide |
 
 ---
 
