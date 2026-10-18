@@ -836,7 +836,7 @@ st.markdown("""
     /* ── KindRed-Inspired Opening & Hero Section ── */
     /* User's Celestial Ice-Cyan Gradient System (#88acd8 -> #9ccfe9 -> #bdfbff) */
     .kindred-gradient-title {
-        background: linear-gradient(135deg, #3d6f9e 0%, #20768e 50%, #0e7d8c 100%);
+        background: linear-gradient(135deg, #163f58 0%, #0c5267 45%, #035a63 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         display: inline-block;
@@ -868,8 +868,8 @@ st.markdown("""
         letter-spacing: -0.03em !important;
         line-height: 0.8 !important;
         text-transform: uppercase !important;
-        color: #1e1c16 !important;
-        opacity: 0.055 !important;
+        color: #161510 !important;
+        opacity: 0.12 !important;
         user-select: none !important;
         pointer-events: none !important;
         text-align: center !important;
@@ -2693,15 +2693,15 @@ elif st.session_state["nav_section"] == "clustermap":
     """, unsafe_allow_html=True)
 
     # Topology Scope Selector & Stat Pills
-    c_map_col1, c_map_col2 = st.columns([2.0, 1.0], vertical_alignment="center")
+    c_map_col1, c_map_col2 = st.columns([2.35, 0.65], vertical_alignment="center")
     with c_map_col1:
         cluster_view = st.radio(
             "Topology Scope",
             options=[
-                "Complete Constellation (All 160+ Nodes, 250+ Edges)",
-                "Enterprise Knowledge Graph (dev_knowledge · 82 Nodes)",
-                "Multi-Tenant Memory Federation (dev_memory_* · 41 Nodes)",
-                "Multi-Agent Swarm Blackboard (dev_agent_state · 36 Nodes)"
+                "All Graphs (160+ Nodes)",
+                "Knowledge (82 Nodes)",
+                "Tenant Memory (41 Nodes)",
+                "Blackboard (36 Nodes)"
             ],
             horizontal=True,
             label_visibility="collapsed"
@@ -2715,8 +2715,21 @@ elif st.session_state["nav_section"] == "clustermap":
         </div>
         """, unsafe_allow_html=True)
 
+    # Topology Palette Legend
+    st.markdown("""
+    <div style="display: flex; gap: 14px; flex-wrap: wrap; margin-top: 6px; margin-bottom: 12px; font-size: 0.75rem; color: #5a5852; padding: 6px 14px; background: rgba(255,255,255,0.72); border: 1px solid rgba(220, 219, 215, 0.75); border-radius: 8px; backdrop-filter: blur(10px);">
+        <span style="display: flex; align-items: center; gap: 5px;"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#0e7d8c;"></span><strong>Functions</strong></span>
+        <span style="display: flex; align-items: center; gap: 5px;"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#d97706;"></span><strong>Decisions</strong></span>
+        <span style="display: flex; align-items: center; gap: 5px;"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#b83a2b;"></span><strong>Incidents</strong></span>
+        <span style="display: flex; align-items: center; gap: 5px;"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#059669;"></span><strong>Procedures</strong></span>
+        <span style="display: flex; align-items: center; gap: 5px;"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#2563eb;"></span><strong>Persons</strong></span>
+        <span style="display: flex; align-items: center; gap: 5px;"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#7c3aed;"></span><strong>Teams</strong></span>
+        <span style="display: flex; align-items: center; gap: 5px;"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#9333ea;"></span><strong>Tokens</strong></span>
+    </div>
+    """, unsafe_allow_html=True)
+
     # Map radio choice to filter_mode
-    if "Complete" in cluster_view:
+    if "All" in cluster_view:
         f_mode = "all"
     elif "Knowledge" in cluster_view:
         f_mode = "knowledge"
@@ -2736,11 +2749,17 @@ elif st.session_state["nav_section"] == "clustermap":
             title=n["title"],
             color=n.get("color", "#0e7d8c"),
             size=n.get("size", 18),
-            shape=n.get("shape", "dot"),
-            font={"face": "Inter, system-ui, sans-serif", "size": 11, "color": "#1e1c16"}
+            shape="dot",
+            font={
+                "face": "Inter, system-ui, sans-serif",
+                "size": 11,
+                "color": "#1e1c16",
+                "strokeWidth": 2,
+                "strokeColor": "#ffffff"
+            }
         )
     for e in full_data["edges"]:
-        cluster_net.add_edge(e["from"], e["to"], label=e["label"], title=e["title"], color="rgba(146, 145, 139, 0.45)", width=1.1)
+        cluster_net.add_edge(e["from"], e["to"], label="", title=e["title"], color="rgba(146, 145, 139, 0.4)", width=1.1)
 
     cluster_net.set_options("""
     var options = {
@@ -2748,7 +2767,14 @@ elif st.session_state["nav_section"] == "clustermap":
         "borderWidth": 1.5,
         "borderWidthSelected": 2.5,
         "color": { "border": "#d1d1cd", "highlight": { "border": "#016a71", "background": "#016a71" } },
-        "font": { "face": "Inter, sans-serif", "size": 11, "color": "#1e1c16" }
+        "font": {
+          "face": "Inter, -apple-system, system-ui, sans-serif",
+          "size": 11,
+          "color": "#1e1c16",
+          "strokeWidth": 2,
+          "strokeColor": "#ffffff",
+          "vadjust": 0
+        }
       },
       "edges": {
         "color": { "color": "rgba(146, 145, 139, 0.4)", "highlight": "#016a71", "hover": "#016a71" },
@@ -2757,19 +2783,19 @@ elif st.session_state["nav_section"] == "clustermap":
       },
       "physics": {
         "forceAtlas2Based": {
-          "gravitationalConstant": -120,
-          "centralGravity": 0.015,
-          "springLength": 160,
-          "springConstant": 0.06,
+          "gravitationalConstant": -150,
+          "centralGravity": 0.012,
+          "springLength": 190,
+          "springConstant": 0.07,
           "damping": 0.92,
-          "avoidOverlap": 0.85
+          "avoidOverlap": 1.0
         },
         "minVelocity": 0.75,
         "solver": "forceAtlas2Based"
       },
       "interaction": {
         "hover": true,
-        "tooltipDelay": 100,
+        "tooltipDelay": 80,
         "zoomView": true,
         "dragView": true
       }
@@ -2801,75 +2827,163 @@ elif st.session_state["nav_section"] == "clustermap":
     with st.container(key="nexus_cluster_frame"):
         components.html(c_html_vis, height=620, scrolling=False)
 
-    # ── Role Breakdown Cards: Explained in a fancy order ──
-    cluster_roles_html = """
-    <div style="margin-top: 1.5rem; margin-bottom: 0.75rem;">
-        <div class="pplx-card-label" style="color: var(--color-deep-teal);">GRAPH TOPOLOGY ROLES &amp; ARCHITECTURE</div>
-        <div style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; color: #1e1c16;">
-            Federated Architecture Breakdown
-        </div>
+    # ── Role Breakdown Mindmap Canvas (§5.4 Architecture Topology) ──
+    cluster_mindmap_html = """
+    <div style="margin-top: 2rem; margin-bottom: 0.5rem; text-align: center;">
+        <div class="kindred-eyebrow kindred-gradient-eyebrow">GRAPH TOPOLOGY ROLES &amp; ARCHITECTURE</div>
+        <h2 style="font-family: var(--font-display); font-size: 1.85rem; font-weight: 800; color: #16332a; margin-top: 4px; letter-spacing: -0.02em;">
+            Federated <span class="kindred-gradient-title">Multi-Graph Architecture</span>
+        </h2>
+        <p style="font-size: 0.875rem; color: #5a6e65; max-width: 660px; margin: 6px auto 0 auto; line-height: 1.5;">
+            Zero cross-tenant contamination: how FalkorDB unifies code AST semantics, isolated historical post-mortems, and multi-agent coordination.
+        </p>
     </div>
-    <div class="cluster-roles-grid">
-        <div class="cluster-role-card" style="border-top: 3px solid #0e7d8c;">
-            <div>
-                <div class="cluster-role-header">
-                    <span class="cluster-role-badge" style="background: rgba(14, 125, 140, 0.12); color: #0e7d8c;">dev_knowledge · 82 NODES</span>
-                    <span style="font-size: 0.72rem; color: #6e6c66;">STATIC CODE &amp; ORG</span>
+
+    <div class="nexus-mindmap-canvas" style="margin-top: 14px;">
+        <!-- Central Hub Node -->
+        <div class="mindmap-root-hub">
+            <div class="hub-inner-node">
+                <div class="hub-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="9" stroke="#0e7d8c" stroke-width="2.2" fill="rgba(14, 125, 140, 0.15)"/>
+                        <circle cx="12" cy="12" r="4" fill="#0e7d8c"/>
+                    </svg>
                 </div>
-                <div class="cluster-role-title">AST &amp; Human Knowledge Topology</div>
-                <div class="cluster-role-body">
-                    Maps abstract syntax trees into concrete function call hierarchies, file system boundaries, CODEOWNERS assignments, Jira tickets, and Slack channels.
-                    <br/><br/>
-                    <strong>Role in Governance:</strong> Traverses call paths up to 5 hops to evaluate blast radius and executes recency-decay centrality to discover true code experts.
+                <div>
+                    <div class="hub-title">FalkorDB Multi-Graph Engine</div>
+                    <div class="hub-subtitle">5 ISOLATED GRAPHS &middot; 160+ NODES &middot; 250+ EDGES &middot; ZERO LATENCY JITTER</div>
                 </div>
-            </div>
-            <div style="border-top: 1px dashed rgba(0, 0, 0, 0.08); padding-top: 10px; display: flex; justify-content: space-between; font-size: 0.75rem; color: #6e6c66;">
-                <span>20 Functions &middot; 13 Engineers</span>
-                <span style="color: #0e7d8c; font-weight: 600;">202 Edges</span>
             </div>
         </div>
 
-        <div class="cluster-role-card" style="border-top: 3px solid #b83a2b;">
-            <div>
-                <div class="cluster-role-header">
-                    <span class="cluster-role-badge" style="background: rgba(184, 58, 43, 0.12); color: #b83a2b;">dev_memory_* · 41 NODES</span>
-                    <span style="font-size: 0.72rem; color: #6e6c66;">EPISODIC &amp; PROCEDURAL</span>
-                </div>
-                <div class="cluster-role-title">Multi-Tenant Repository Memory</div>
-                <div class="cluster-role-body">
-                    Maintains isolated memory partitions for each service (<code>acme_checkout</code>, <code>acme_auth</code>, <code>acme_data</code>). Stores past post-mortems with recorded dollar losses and proven recovery procedures.
-                    <br/><br/>
-                    <strong>Role in Governance:</strong> Acts as an institutional immune system, immediately flagging recurring incident failure modes before code merges.
-                </div>
-            </div>
-            <div style="border-top: 1px dashed rgba(0, 0, 0, 0.08); padding-top: 10px; display: flex; justify-content: space-between; font-size: 0.75rem; color: #6e6c66;">
-                <span>3 Repositories &middot; $84K Losses</span>
-                <span style="color: #b83a2b; font-weight: 600;">6 Playbooks</span>
-            </div>
+        <!-- Animated Synapse Vector Connections -->
+        <div class="mindmap-synapse-wrap">
+            <svg viewBox="0 0 1000 65" width="100%" height="65" preserveAspectRatio="none" style="display:block;">
+                <defs>
+                    <linearGradient id="clusterSynL" x1="50%" y1="0%" x2="16%" y2="100%">
+                        <stop offset="0%" stop-color="#0e7d8c"/>
+                        <stop offset="100%" stop-color="#3d6f9e"/>
+                    </linearGradient>
+                    <linearGradient id="clusterSynM" x1="50%" y1="0%" x2="50%" y2="100%">
+                        <stop offset="0%" stop-color="#0e7d8c"/>
+                        <stop offset="100%" stop-color="#b83a2b"/>
+                    </linearGradient>
+                    <linearGradient id="clusterSynR" x1="50%" y1="0%" x2="84%" y2="100%">
+                        <stop offset="0%" stop-color="#0e7d8c"/>
+                        <stop offset="100%" stop-color="#7c3aed"/>
+                    </linearGradient>
+                </defs>
+                <path d="M500,0 C500,35 160,25 160,65" fill="none" stroke="url(#clusterSynL)" stroke-width="2.2" stroke-dasharray="6,4" class="synapse-flow"/>
+                <path d="M500,0 C500,35 500,30 500,65" fill="none" stroke="url(#clusterSynM)" stroke-width="2.2" stroke-dasharray="6,4" class="synapse-flow"/>
+                <path d="M500,0 C500,35 840,25 840,65" fill="none" stroke="url(#clusterSynR)" stroke-width="2.2" stroke-dasharray="6,4" class="synapse-flow"/>
+                <circle cx="160" cy="63" r="3.5" fill="#3d6f9e"/>
+                <circle cx="500" cy="63" r="3.5" fill="#b83a2b"/>
+                <circle cx="840" cy="63" r="3.5" fill="#7c3aed"/>
+            </svg>
         </div>
 
-        <div class="cluster-role-card" style="border-top: 3px solid #7c3aed;">
-            <div>
-                <div class="cluster-role-header">
-                    <span class="cluster-role-badge" style="background: rgba(124, 58, 237, 0.12); color: #7c3aed;">dev_agent_state · 36 NODES</span>
-                    <span style="font-size: 0.72rem; color: #6e6c66;">SWARM BLACKBOARD</span>
+        <!-- 3 Mindmap Branch Cards -->
+        <div class="mindmap-branches-row">
+            <!-- Branch 1: Knowledge Graph -->
+            <div class="mindmap-branch-card" style="border-top: 3px solid #0e7d8c;">
+                <div>
+                    <div class="branch-card-header">
+                        <span class="branch-num-chip" style="color: #0e7d8c;">GRAPH // 01</span>
+                        <span class="branch-layer-tag">dev_knowledge &middot; 82 NODES</span>
+                    </div>
+                    <div class="branch-title">AST &amp; Human Knowledge</div>
+                    <div class="branch-role-desc">
+                        Maps code hierarchies, file boundaries, CODEOWNERS assignments, Jira tickets, and Slack discussions into a connected graph.
+                    </div>
                 </div>
-                <div class="cluster-role-title">Multi-Agent Swarm Blackboard</div>
-                <div class="cluster-role-body">
-                    Serves as the shared coordination plane for the autonomous Scout, Consolidator, and Fixer agent swarm. Handoffs and payloads are recorded as immutable graph nodes.
-                    <br/><br/>
-                    <strong>Role in Governance:</strong> Eliminates hallucination and hidden in-memory state. Every governance verdict has a full Cypher-auditable reasoning trace.
+                <div class="mindmap-satellite-group">
+                    <div class="mindmap-leaf">
+                        <span class="leaf-node-icon" style="color: #0e7d8c;">&bull;</span>
+                        <span><strong>5-Hop Blast Radius:</strong> Traverses multi-tier caller hierarchies upstream</span>
+                    </div>
+                    <div class="mindmap-leaf">
+                        <span class="leaf-node-icon" style="color: #0e7d8c;">&bull;</span>
+                        <span><strong>Decay Centrality:</strong> Discovers true code experts via commit recency</span>
+                    </div>
+                    <div class="mindmap-leaf">
+                        <span class="leaf-node-icon" style="color: #0e7d8c;">&bull;</span>
+                        <span><strong>Metadata Provenance:</strong> Links code changes directly to architectural decisions</span>
+                    </div>
+                </div>
+                <div style="border-top: 1px dashed rgba(0, 0, 0, 0.08); padding-top: 10px; display: flex; justify-content: space-between; font-size: 0.75rem; color: #6e6c66; margin-top: 12px;">
+                    <span>20 Functions &middot; 13 Engineers</span>
+                    <span style="color: #0e7d8c; font-weight: 600;">202 Edges</span>
                 </div>
             </div>
-            <div style="border-top: 1px dashed rgba(0, 0, 0, 0.08); padding-top: 10px; display: flex; justify-content: space-between; font-size: 0.75rem; color: #6e6c66;">
-                <span>3 Autonomous Agents</span>
-                <span style="color: #7c3aed; font-weight: 600;">Token Trace</span>
+
+            <!-- Branch 2: Multi-Tenant Repository Memory -->
+            <div class="mindmap-branch-card" style="border-top: 3px solid #b83a2b;">
+                <div>
+                    <div class="branch-card-header">
+                        <span class="branch-num-chip" style="color: #b83a2b;">GRAPH // 02</span>
+                        <span class="branch-layer-tag">dev_memory_* &middot; 41 NODES</span>
+                    </div>
+                    <div class="branch-title">Multi-Tenant Repository Memory</div>
+                    <div class="branch-role-desc">
+                        Maintains isolated memory partitions (<code>checkout</code>, <code>auth</code>, <code>data</code>) for historical post-mortems and tested recovery playbooks.
+                    </div>
+                </div>
+                <div class="mindmap-satellite-group">
+                    <div class="mindmap-leaf">
+                        <span class="leaf-node-icon" style="color: #b83a2b;">&bull;</span>
+                        <span><strong>Tenant Isolation:</strong> Isolated keyspaces prevent cross-tenant state leakage</span>
+                    </div>
+                    <div class="mindmap-leaf">
+                        <span class="leaf-node-icon" style="color: #b83a2b;">&bull;</span>
+                        <span><strong>Episodic Outages:</strong> $84,000 recorded losses linked to regression patterns</span>
+                    </div>
+                    <div class="mindmap-leaf">
+                        <span class="leaf-node-icon" style="color: #b83a2b;">&bull;</span>
+                        <span><strong>Procedural Compliance:</strong> 6 runbooks checked deterministically before merge</span>
+                    </div>
+                </div>
+                <div style="border-top: 1px dashed rgba(0, 0, 0, 0.08); padding-top: 10px; display: flex; justify-content: space-between; font-size: 0.75rem; color: #6e6c66; margin-top: 12px;">
+                    <span>3 Repositories &middot; $84K Losses</span>
+                    <span style="color: #b83a2b; font-weight: 600;">6 Playbooks</span>
+                </div>
+            </div>
+
+            <!-- Branch 3: Multi-Agent Swarm Blackboard -->
+            <div class="mindmap-branch-card" style="border-top: 3px solid #7c3aed;">
+                <div>
+                    <div class="branch-card-header">
+                        <span class="branch-num-chip" style="color: #7c3aed;">GRAPH // 03</span>
+                        <span class="branch-layer-tag">dev_agent_state &middot; 36 NODES</span>
+                    </div>
+                    <div class="branch-title">Multi-Agent Swarm Blackboard</div>
+                    <div class="branch-role-desc">
+                        Serves as the shared coordination plane for autonomous Scout, Consolidator, and Fixer agents with immutable graph tokens.
+                    </div>
+                </div>
+                <div class="mindmap-satellite-group">
+                    <div class="mindmap-leaf">
+                        <span class="leaf-node-icon" style="color: #7c3aed;">&bull;</span>
+                        <span><strong>Asynchronous Handoffs:</strong> Structured blackboard payloads coordinate agents</span>
+                    </div>
+                    <div class="mindmap-leaf">
+                        <span class="leaf-node-icon" style="color: #7c3aed;">&bull;</span>
+                        <span><strong>Zero Hallucination:</strong> Persistent tokens eliminate hidden in-memory state</span>
+                    </div>
+                    <div class="mindmap-leaf">
+                        <span class="leaf-node-icon" style="color: #7c3aed;">&bull;</span>
+                        <span><strong>Auditable Provenance:</strong> Every governance gate has an auditable Cypher trace</span>
+                    </div>
+                </div>
+                <div style="border-top: 1px dashed rgba(0, 0, 0, 0.08); padding-top: 10px; display: flex; justify-content: space-between; font-size: 0.75rem; color: #6e6c66; margin-top: 12px;">
+                    <span>3 Autonomous Agents</span>
+                    <span style="color: #7c3aed; font-weight: 600;">Token Trace</span>
+                </div>
             </div>
         </div>
     </div>
     """
-    clean_cluster_roles = "\n".join(l.strip() for l in cluster_roles_html.splitlines() if l.strip())
-    st.markdown(clean_cluster_roles, unsafe_allow_html=True)
+    clean_cluster_mindmap = "\n".join(l.strip() for l in cluster_mindmap_html.splitlines() if l.strip())
+    st.markdown(clean_cluster_mindmap, unsafe_allow_html=True)
 
 
 # ╔══════════════════════════════════════════════════════════════╗

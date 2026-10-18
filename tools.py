@@ -641,21 +641,21 @@ def get_full_instance_graph(filter_mode: str = "all") -> dict:
     c = db.client()
     prefix = db.PREFIX
 
-    # Define palette & shapes by node label
+    # Define palette & sizes by node label (uniform dot shape guarantees clean label alignment)
     STYLE_CONFIG = {
         "Function": {"color": "#0e7d8c", "shape": "dot", "size": 18},
-        "Person": {"color": "#10b981", "shape": "dot", "size": 20},
-        "Team": {"color": "#0284c7", "shape": "square", "size": 24},
-        "Decision": {"color": "#f59e0b", "shape": "diamond", "size": 22},
-        "PullRequest": {"color": "#ea580c", "shape": "triangle", "size": 18},
-        "Ticket": {"color": "#ec4899", "shape": "dot", "size": 16},
-        "SlackThread": {"color": "#06b6d4", "shape": "dot", "size": 16},
-        "Doc": {"color": "#8b5cf6", "shape": "dot", "size": 16},
-        "Incident": {"color": "#b83a2b", "shape": "triangleDown", "size": 24},
-        "Procedure": {"color": "#059669", "shape": "hexagon", "size": 20},
-        "Session": {"color": "#4338ca", "shape": "star", "size": 24},
-        "CoordinationToken": {"color": "#9333ea", "shape": "dot", "size": 16},
-        "AgentFinding": {"color": "#e11d48", "shape": "dot", "size": 18},
+        "Person": {"color": "#2563eb", "shape": "dot", "size": 16},
+        "Team": {"color": "#7c3aed", "shape": "dot", "size": 24},
+        "Decision": {"color": "#d97706", "shape": "dot", "size": 22},
+        "PullRequest": {"color": "#ea580c", "shape": "dot", "size": 18},
+        "Ticket": {"color": "#ec4899", "shape": "dot", "size": 15},
+        "SlackThread": {"color": "#06b6d4", "shape": "dot", "size": 15},
+        "Doc": {"color": "#8b5cf6", "shape": "dot", "size": 15},
+        "Incident": {"color": "#b83a2b", "shape": "dot", "size": 22},
+        "Procedure": {"color": "#059669", "shape": "dot", "size": 18},
+        "Session": {"color": "#4338ca", "shape": "dot", "size": 20},
+        "CoordinationToken": {"color": "#9333ea", "shape": "dot", "size": 14},
+        "AgentFinding": {"color": "#e11d48", "shape": "dot", "size": 16},
     }
 
     graphs_to_query = []
@@ -681,8 +681,8 @@ def get_full_instance_graph(filter_mode: str = "all") -> dict:
         plabel = labels[0] if labels else "Entity"
         props = getattr(n, "properties", {})
         title_str = props.get("name") or props.get("id") or props.get("title") or props.get("summary") or nid
-        if len(str(title_str)) > 30:
-            short_title = str(title_str)[:27] + "..."
+        if len(str(title_str)) > 26:
+            short_title = str(title_str)[:23] + "..."
         else:
             short_title = str(title_str)
 
@@ -702,13 +702,13 @@ def get_full_instance_graph(filter_mode: str = "all") -> dict:
 
         nodes[nid] = {
             "id": nid,
-            "label": f"{plabel}\n{short_title}",
+            "label": short_title,
             "group": plabel,
             "domain": domain,
             "domain_label": domain_label,
             "title": tooltip,
             "color": color,
-            "shape": style["shape"],
+            "shape": "dot",
             "size": style["size"],
             "properties": props
         }
@@ -727,7 +727,7 @@ def get_full_instance_graph(filter_mode: str = "all") -> dict:
                     edges.append({
                         "from": nid,
                         "to": mid,
-                        "label": rel_name,
+                        "label": "",  # Empty to prevent 250+ overlapping text labels; visible in tooltip
                         "title": f"[{domain_label}] {rel_name}",
                         "domain": domain
                     })
