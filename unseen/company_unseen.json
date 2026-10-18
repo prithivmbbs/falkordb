@@ -1,0 +1,115 @@
+{
+  "_meta": "UNSEEN sample company for rev1 backend-generalization validation. Deliberately shares no tenant/function/people names with the Acme demo. Seed with: python seed.py --input unseen/company_unseen.json",
+  "tenants": ["nova_trade", "nova_risk", "nova_wallet"],
+
+  "tenant_names": {
+    "nova_trade": "Nova Trading Core",
+    "nova_risk": "Nova Risk & Compliance",
+    "nova_wallet": "Nova Custody Wallet"
+  },
+
+  "teams": [
+    {"id": "nt-core",   "name": "Trading Core",   "lead": "mila", "repo": "nova_trade"},
+    {"id": "nt-risk",   "name": "Risk Platform",  "lead": "omar", "repo": "nova_risk"},
+    {"id": "nt-wallet", "name": "Custody Wallet", "lead": "ines", "repo": "nova_wallet"}
+  ],
+
+  "people": [
+    {"id": "mila",  "name": "Mila",  "active": true,  "team": "nt-core"},
+    {"id": "jonas", "name": "Jonas", "active": true,  "team": "nt-core"},
+    {"id": "kai",   "name": "Kai",   "active": false, "team": "nt-core", "left_on": "2025-09-01"},
+    {"id": "omar",  "name": "Omar",  "active": true,  "team": "nt-risk"},
+    {"id": "sana",  "name": "Sana",  "active": true,  "team": "nt-risk"},
+    {"id": "ines",  "name": "Ines",  "active": true,  "team": "nt-wallet"},
+    {"id": "pavel", "name": "Pavel", "active": true,  "team": "nt-wallet"}
+  ],
+
+  "functions": [
+    {"name": "placeOrder",       "file": "trade/orders.py",       "owner_team": "nt-core",   "calls": [], "repo": "nova_trade"},
+    {"name": "matchOrders",      "file": "trade/matching.py",     "owner_team": "nt-core",   "calls": ["placeOrder", "evaluateCreditRisk"], "repo": "nova_trade"},
+    {"name": "settleTrade",      "file": "trade/settlement.py",   "owner_team": "nt-core",   "calls": ["placeOrder"], "repo": "nova_trade"},
+    {"name": "calcFees",         "file": "trade/fees.py",         "owner_team": "nt-core",   "calls": ["settleTrade"], "repo": "nova_trade"},
+
+    {"name": "evaluateCreditRisk", "file": "risk/credit.py",      "owner_team": "nt-risk",   "calls": [], "repo": "nova_risk"},
+    {"name": "freezeAccount",      "file": "risk/freeze.py",      "owner_team": "nt-risk",   "calls": [], "repo": "nova_risk", "compliance_critical": true},
+    {"name": "reportRegulator",    "file": "risk/regulator.py",   "owner_team": "nt-risk",   "calls": ["evaluateCreditRisk"], "repo": "nova_risk"},
+
+    {"name": "withdrawFunds",             "file": "wallet/withdraw.py",    "owner_team": "nt-wallet", "calls": ["signColdWalletTransaction"], "repo": "nova_wallet"},
+    {"name": "signColdWalletTransaction", "file": "wallet/cold_signing.py", "owner_team": "nt-wallet", "calls": [], "repo": "nova_wallet"},
+    {"name": "generateStatement",         "file": "wallet/statements.py",  "owner_team": "nt-wallet", "calls": [], "repo": "nova_wallet"}
+  ],
+
+  "commits": [
+    {"person": "mila",  "function": "placeOrder",       "count": 3,  "last": "2026-08-20"},
+    {"person": "mila",  "function": "matchOrders",      "count": 12, "last": "2026-09-28"},
+    {"person": "mila",  "function": "calcFees",         "count": 5,  "last": "2026-07-14"},
+    {"person": "jonas", "function": "settleTrade",      "count": 9,  "last": "2026-10-02"},
+    {"person": "jonas", "function": "placeOrder",       "count": 4,  "last": "2026-06-30"},
+    {"person": "kai",   "function": "placeOrder",       "count": 18, "last": "2025-08-11"},
+    {"person": "omar",  "function": "evaluateCreditRisk", "count": 11, "last": "2026-09-30"},
+    {"person": "omar",  "function": "freezeAccount",    "count": 6,  "last": "2026-08-05"},
+    {"person": "sana",  "function": "reportRegulator",  "count": 8,  "last": "2026-09-18"},
+    {"person": "sana",  "function": "evaluateCreditRisk", "count": 2, "last": "2026-05-22"},
+    {"person": "pavel", "function": "signColdWalletTransaction", "count": 7, "last": "2026-09-25"},
+    {"person": "pavel", "function": "withdrawFunds",    "count": 3,  "last": "2026-08-12"},
+    {"person": "ines",  "function": "withdrawFunds",    "count": 5,  "last": "2026-09-08"}
+  ],
+
+  "pull_requests": [
+    {"id": "PR-N101", "title": "Risk: change regulator report payload schema in reportRegulator",
+     "author": "sana", "date": "2026-10-15", "state": "open", "repo": "nova_risk",
+     "modifies": ["reportRegulator"], "reviewers": []},
+    {"id": "PR-N102", "title": "Risk: rename internal flag in freezeAccount",
+     "author": "omar", "date": "2026-10-15", "state": "open", "repo": "nova_risk",
+     "modifies": ["freezeAccount"], "reviewers": []},
+    {"id": "PR-N103", "title": "Perf: batch settlement queue processing in settleTrade",
+     "author": "jonas", "date": "2026-10-14", "state": "open", "repo": "nova_trade",
+     "modifies": ["settleTrade"], "reviewers": []},
+    {"id": "PR-N104", "title": "UI: restyle PDF header in generateStatement",
+     "author": "ines", "date": "2026-10-13", "state": "open", "repo": "nova_wallet",
+     "modifies": ["generateStatement"], "reviewers": []},
+    {"id": "PR-N105", "title": "Wallet: rotate cold signing nonce derivation in signColdWalletTransaction",
+     "author": "pavel", "date": "2026-10-14", "state": "open", "repo": "nova_wallet",
+     "modifies": ["signColdWalletTransaction"], "reviewers": []},
+    {"id": "PR-N106", "title": "Risk: cache credit model coefficients in evaluateCreditRisk",
+     "author": "omar", "date": "2026-10-12", "state": "open", "repo": "nova_risk",
+     "modifies": ["evaluateCreditRisk"], "reviewers": []}
+  ],
+
+  "slack": [],
+  "tickets": [],
+  "decisions": [],
+
+  "docs": [
+    {"id": "DOCN-1", "title": "Order Matching Engine Operations Runbook", "last_updated": "2026-04-01",
+     "describes": ["matchOrders"], "repo": "nova_trade"},
+    {"id": "DOCN-2", "title": "Cold Wallet Signing & Key Custody Standard", "last_updated": "2026-07-19",
+     "describes": ["signColdWalletTransaction"], "repo": "nova_wallet"}
+  ],
+
+  "incidents": [
+    {"id": "IN-201", "date": "2026-04-22", "loss_usd": 42000,
+     "summary": "Matching engine replayed stale fills after a partial outage, duplicating client executions for 90 minutes.",
+     "caused_by_pr": "PR-N090", "affected": ["matchOrders"], "repo": "nova_trade"},
+    {"id": "IN-202", "date": "2026-06-14", "loss_usd": 15000,
+     "summary": "Settlement replay double-counted fees across retried batches, overcharging 3,100 accounts.",
+     "caused_by_pr": "PR-N091", "affected": ["settleTrade"], "repo": "nova_trade"}
+  ],
+
+  "procedures": [
+    {"id": "PN-201", "title": "Matching Engine Replay Safety Playbook",
+     "steps": [
+       "Verify idempotent fill-id watermarking before any replay",
+       "Replay against shadow matching cluster with captured tape",
+       "Gate rollout behind per-venue feature flag and watch duplicate-fill alerts for 48h"
+     ],
+     "learned_from": "IN-201", "applies_to": ["matchOrders"], "repo": "nova_trade"},
+    {"id": "PN-202", "title": "Settlement Batch Replay Procedure",
+     "steps": [
+       "Reconcile fee ledger against raw fills before retrying a batch",
+       "Enable fee-dedup marker in the settlement cursor",
+       "Run end-of-day reconciliation twice before closing the incident"
+     ],
+     "learned_from": "IN-202", "applies_to": ["settleTrade"], "repo": "nova_trade"}
+  ]
+}

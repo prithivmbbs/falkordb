@@ -1,0 +1,45 @@
+{
+  "workspace": "medcore",
+  "channels": [
+    {"id": "C-MED-1", "name": "clinical-eng", "created": 1700000000, "creator": "U-DARIA"},
+    {"id": "C-MED-2", "name": "compliance", "created": 1700000001, "creator": "U-RAVI"}
+  ],
+  "users": [
+    {"id": "U-DARIA", "name": "daria", "real_name": "Daria", "deleted": false},
+    {"id": "U-RAVI", "name": "ravi", "real_name": "Ravi", "deleted": false},
+    {"id": "U-TOMAS", "name": "tomas", "real_name": "Tomas", "deleted": false},
+    {"id": "U-HELENA", "name": "helena", "real_name": "Helena", "deleted": true},
+    {"id": "U-UNMAPPED", "name": "contractor_x", "real_name": "Contractor X", "deleted": false}
+  ],
+  "messages": [
+    {
+      "type": "message",
+      "channel": "C-MED-1",
+      "user": "U-DARIA",
+      "text": "Helena originally wrote validatePatient with the strict identity-proofing branch; do not remove it, it is load-bearing for HIPAA.",
+      "ts": "1700001000.000001"
+    },
+    {
+      "type": "message",
+      "channel": "C-MED-2",
+      "user": "U-RAVI",
+      "text": "Article 32 requires verifiable audit trail before any health record encryption change.",
+      "ts": "1700002000.000002"
+    },
+    {
+      "type": "message",
+      "channel": "C-MED-1",
+      "user": "U-UNMAPPED",
+      "text": "Quick question about appointment scheduling.",
+      "ts": "1700003000.000003"
+    },
+    {
+      "type": "message",
+      "channel": "C-MED-1",
+      "user": "U-TOMAS",
+      "text": "channel topic updated",
+      "ts": "1700004000.000004",
+      "subtype": "channel_topic"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "compliance_critical_functions": ["hardDeleteAccount", "verifyJwtToken"],
+  "compliance_critical_decisions": ["D-EX-1"]
+}

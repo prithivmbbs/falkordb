@@ -7,7 +7,13 @@ Provides fixed, parameterized, safe Cypher queries covering:
 5. Scout-Agent risk finding logging (Track 02)
 6. Autonomous PR governance action & doc staleness tagging (Track 01 & 02)
 """
-from db import knowledge, memory, agent_state, rows
+try:
+    from db import knowledge, memory, agent_state, rows
+except ImportError:
+    try:
+        from files.db import knowledge, memory, agent_state, rows
+    except ImportError:
+        from graph.db import knowledge, memory, agent_state, rows
 
 MAX_HOPS = 5
 
@@ -25,7 +31,7 @@ def _shortest_per_endpoint(paths: list[dict], end: int) -> list[dict]:
 def assess_blast_radius(function: str, max_hops: int = MAX_HOPS) -> dict:
     """Evaluate blast radius: what breaks if this function changes or is deleted?
     Returns upstream callers, downstream callees, impacted teams, protecting decisions,
-    and associated Jira tickets.
+    associated Jira tickets, and data-driven compliance criticality.
     """
     hops = max(1, min(int(max_hops), MAX_HOPS))
     g = knowledge()
@@ -56,6 +62,18 @@ def assess_blast_radius(function: str, max_hops: int = MAX_HOPS) -> dict:
         "MATCH (t:Ticket)-[:REFERENCES]->(:Function {name:$n}) "
         "RETURN t.id AS id, t.title AS title, t.status AS status", p))
 
+    # rev1 (backend-generalization): compliance criticality is data-driven, not a
+    # hardcoded function-name set. A function is critical when it (or a Decision
+    # that JUSTIFIES it) is flagged `compliance_critical` in the graph.
+    fn_flag = rows(g.ro_query(
+        "MATCH (f:Function {name:$n}) "
+        "RETURN coalesce(f.compliance_critical, false) AS flag", p))
+    critical_decisions = rows(g.ro_query(
+        "MATCH (d:Decision)-[:JUSTIFIES]->(:Function {name:$n}) "
+        "WHERE coalesce(d.compliance_critical, false) = true "
+        "RETURN d.id AS id", p))
+    compliance_critical = bool(fn_flag and fn_flag[0]["flag"]) or bool(critical_decisions)
+
     teams_affected: dict[str, list[str]] = {}
     for t in teams:
         teams_affected.setdefault(t["team"], []).append(t["function"])
@@ -73,6 +91,8 @@ def assess_blast_radius(function: str, max_hops: int = MAX_HOPS) -> dict:
         "teams_affected": teams_affected,
         "protecting_decisions": decisions,
         "impacted_tickets": tickets,
+        "compliance_critical": compliance_critical,
+        "compliance_decisions": [d["id"] for d in critical_decisions],
         "risk_hint": risk_hint,
     }
 
@@ -236,7 +256,7 @@ def block_or_approve_pr(pr_id: str, function: str, decision: str, reviewer_name:
     """Fixer-Agent autonomous governance action:
     1. Sets PR state (e.g. BLOCKED, APPROVED).
     2. Flags connected documentation as is_stale = true.
-    3. Auto-assigns the true domain expert reviewer to the PR.
+    3. Links the true domain expert reviewer when one exists (skipped otherwise).
     """
     decision = decision.upper()
     g_know = knowledge()
@@ -254,8 +274,10 @@ def block_or_approve_pr(pr_id: str, function: str, decision: str, reviewer_name:
         pr.risk_level = $level
     WITH pr
     OPTIONAL MATCH (doc:Doc)-[:DESCRIBES]->(:Function {name:$fn})
-    SET doc.is_stale = true,
-        doc.flagged_reason = 'Flagged stale due to PR ' + $pr_id + ' modifying ' + $fn
+    FOREACH (d IN CASE WHEN doc IS NULL THEN [] ELSE [doc] END |
+        SET d.is_stale = true,
+            d.flagged_reason = 'Flagged stale due to PR ' + $pr_id + ' modifying ' + $fn
+    )
     RETURN pr.id AS pr_id, pr.state AS new_state, pr.risk_level AS risk_level,
            collect(doc.title) AS flagged_stale_docs
     """
@@ -279,175 +301,113 @@ def block_or_approve_pr(pr_id: str, function: str, decision: str, reviewer_name:
         "pr_id": pr_id,
         "status": decision,
         "risk_level": risk_level.upper(),
-        "assigned_reviewer": assigned_user or reviewer_name or "None",
+        "assigned_reviewer": assigned_user or reviewer_name,
         "flagged_stale_docs": pr_res[0]["flagged_stale_docs"] if pr_res else []
     }
 
 
-def get_subgraph_for_visualization(function: str = "applyDiscount", repo: str = "acme_checkout") -> dict:
-    """Extracts a clean, non-overlapping neighborhood subgraph around the target function.
-    Adheres to the Perplexity AI Scholar's Parchment palette with concise labels and rich hover tooltips.
+def get_subgraph_for_visualization(function: str = "applyDiscount", repo: str = None) -> dict:
+    """Extracts nodes and edges formatted for PyVis / NetworkX / interactive web dashboards.
+    Highlights blast radius paths, true experts, and decision provenance.
     """
     g_know = knowledge()
     g_mem = memory(repo)
+    p = {"n": function}
+
+    # Fetch knowledge nodes and edges connected to or around the target function
+    know_res = g_know.query("""
+        MATCH (n)
+        OPTIONAL MATCH (n)-[r]->(m)
+        RETURN n, r, m
+    """)
+
+    # Futuristic Cyber & Jade Green palette for nodes
+    COLOR_MAP = {
+        "Function": "#00FF9D",     # Jade Green
+        "Person": "#10B981",       # Emerald
+        "Team": "#38BDF8",         # Sky Blue
+        "PullRequest": "#F59E0B",  # Amber
+        "Doc": "#A78BFA",          # Violet
+        "Ticket": "#EC4899",       # Pink
+        "SlackThread": "#06B6D4",   # Cyan
+        "Decision": "#FBBF24",     # Gold
+        "Incident": "#EF4444",     # Red
+        "Procedure": "#34D399",    # Light Jade
+        "AgentFinding": "#F43F5E"  # Rose
+    }
 
     nodes = {}
     edges = []
 
-    def add_node(node_id: str, label: str, group: str, title: str, color: str, size: int = 16, shape: str = "dot"):
+    def extract_node(node):
+        if not node:
+            return
+        node_id = str(node.id)
+        labels = getattr(node, "labels", ["Unknown"])
+        primary_label = labels[0] if labels else "Unknown"
+        props = getattr(node, "properties", {})
+        title = props.get("name") or props.get("id") or props.get("title") or props.get("summary") or node_id
+        
+        # Determine specific icon/color
+        color = COLOR_MAP.get(primary_label, "#94A3B8")
+        if primary_label == "Person" and not props.get("active", True):
+            color = "#64748B"  # Gray for departed experts
+        elif primary_label == "Function" and props.get("name") == function:
+            color = "#EF4444"  # Highlighted target in red
+
         if node_id not in nodes:
             nodes[node_id] = {
-                "id": str(node_id),
-                "label": label,
-                "group": group,
-                "title": title,
+                "id": node_id,
+                "label": f"{primary_label}: {title}",
+                "group": primary_label,
+                "title": f"<b>{primary_label}</b>: {title}<br/>" + "<br/>".join(f"{k}: {v}" for k, v in props.items()),
                 "color": color,
-                "size": size,
-                "shape": shape
+                "properties": props
             }
 
-    def add_edge(from_id: str, to_id: str, label: str, title: str = ""):
-        edges.append({
-            "from": str(from_id),
-            "to": str(to_id),
-            "label": label,
-            "title": title or label
-        })
+    for record in know_res.result_set:
+        n, r, m = record[0], record[1], record[2]
+        extract_node(n)
+        if m:
+            extract_node(m)
+        if r and n and m:
+            rel_type = getattr(r, "relation", "RELATED_TO")
+            edges.append({
+                "from": str(n.id),
+                "to": str(m.id),
+                "label": rel_type,
+                "title": rel_type
+            })
 
-    # 1. Evaluated Target Function (Deep Teal anchor)
-    target_id = f"fn_{function}"
-    add_node(
-        target_id,
-        f"{function}()",
-        "TargetFunction",
-        f"<b>Target Function</b>: <code>{function}()</code><br/>Repository: {repo}",
-        "#016a71",
-        size=26,
-        shape="dot"
-    )
-
-    # 2. Upstream Callers & Downstream Callees
+    # Fetch memory graph nodes (Incidents & Procedures)
     try:
-        res_callers = g_know.query("""
-            MATCH (c:Function)-[r:CALLS]->(fn:Function {name: $fn})
-            RETURN c.name
-        """, {"fn": function})
-        for row in res_callers.result_set:
-            c_name = row[0]
-            c_id = f"fn_{c_name}"
-            add_node(c_id, f"{c_name}()", "Caller", f"<b>Upstream Caller</b>: <code>{c_name}()</code>", "#27251e", size=15)
-            add_edge(c_id, target_id, "CALLS")
-
-        res_callees = g_know.query("""
-            MATCH (fn:Function {name: $fn})-[r:CALLS]->(c:Function)
-            RETURN c.name
-        """, {"fn": function})
-        for row in res_callees.result_set:
-            c_name = row[0]
-            c_id = f"fn_{c_name}"
-            add_node(c_id, f"{c_name}()", "Callee", f"<b>Downstream Dependency</b>: <code>{c_name}()</code>", "#72706b", size=14)
-            add_edge(target_id, c_id, "CALLS")
-    except Exception:
-        pass
-
-    # 3. Key Experts (Top 2 ranked by recency-decay score)
-    try:
-        res_people = g_know.query("""
-            MATCH (p:Person)-[r:KNOWS_ABOUT]->(fn:Function {name: $fn})
-            RETURN p.name, p.active, r.score ORDER BY r.score DESC LIMIT 2
-        """, {"fn": function})
-        for row in res_people.result_set:
-            p_name, active, score = row[0], row[1], row[2]
-            p_id = f"person_{p_name}"
-            status = "Active Expert" if active else "Departed"
-            color = "#016a71" if active else "#92918b"
-            add_node(
-                p_id,
-                f"👤 {p_name} ({'Active' if active else 'Departed'})",
-                "Person",
-                f"<b>{p_name}</b> ({status})<br/>Centrality Score: {round(float(score or 0), 2)}",
-                color,
-                size=18
-            )
-            add_edge(p_id, target_id, f"SCORE {round(float(score or 0), 1)}")
-    except Exception:
-        pass
-
-    # 4. Living Contract Decisions
-    try:
-        res_dec = g_know.query("""
-            MATCH (d:Decision)-[r:JUSTIFIES]->(fn:Function {name: $fn})
-            RETURN d.id, d.summary
-        """, {"fn": function})
-        for row in res_dec.result_set:
-            d_id, summary = row[0], row[1]
-            node_id = f"dec_{d_id}"
-            add_node(
-                node_id,
-                f"📜 {d_id}",
-                "Decision",
-                f"<b>Decision {d_id}</b><br/>{summary}",
-                "#8a6100",
-                size=18
-            )
-            add_edge(node_id, target_id, "JUSTIFIES")
-    except Exception:
-        pass
-
-    # 5. Documentation
-    try:
-        res_docs = g_know.query("""
-            MATCH (d:Doc)-[r:DESCRIBES]->(fn:Function {name: $fn})
-            RETURN d.id, d.title
-        """, {"fn": function})
-        for row in res_docs.result_set:
-            d_id, title = row[0], row[1]
-            node_id = f"doc_{d_id}"
-            add_node(
-                node_id,
-                f"📄 {d_id}",
-                "Doc",
-                f"<b>Doc {d_id}</b><br/>{title}",
-                "#72706b",
-                size=15
-            )
-            add_edge(node_id, target_id, "DESCRIBES")
-    except Exception:
-        pass
-
-    # 6. Episodic Memory (Incidents) & Procedural Memory (Playbooks)
-    try:
-        res_mem = g_mem.query("""
-            MATCH (inc:Incident)-[r:AFFECTED]->(fn:Function {name: $fn})
-            OPTIONAL MATCH (proc:Procedure)-[r2:LEARNED_FROM]->(inc)
-            RETURN inc.id, inc.loss_usd, inc.summary, proc.id, proc.title
-        """, {"fn": function})
-        for row in res_mem.result_set:
-            inc_id, loss, summary, proc_id, proc_title = row[0], row[1], row[2], row[3], row[4]
-            node_inc_id = f"inc_{inc_id}"
-            loss_k = f"${int(loss/1000)}k" if loss else "$0"
-            add_node(
-                node_inc_id,
-                f"⚠️ {inc_id} ({loss_k})",
-                "Incident",
-                f"<b>Incident {inc_id}</b><br/>Loss: ${loss:,}<br/>{summary}",
-                "#b83a2b",
-                size=20
-            )
-            add_edge(node_inc_id, target_id, "AFFECTED")
-
-            if proc_id:
-                node_proc_id = f"proc_{proc_id}"
-                add_node(
-                    node_proc_id,
-                    f"📋 {proc_id}",
-                    "Procedure",
-                    f"<b>Playbook {proc_id}</b><br/>{proc_title}",
-                    "#016a71",
-                    size=17
-                )
-                add_edge(node_proc_id, node_inc_id, "LEARNED_FROM")
-                add_edge(node_proc_id, target_id, "APPLIES_TO")
+        mem_res = g_mem.query("MATCH (n) OPTIONAL MATCH (n)-[r]->(m) RETURN n, r, m")
+        for record in mem_res.result_set:
+            n, r, m = record[0], record[1], record[2]
+            # Use negative IDs for memory nodes to prevent collision
+            if n:
+                mem_n_id = f"mem_{n.id}"
+                labels = getattr(n, "labels", ["Memory"])
+                primary_label = labels[0] if labels else "Memory"
+                props = getattr(n, "properties", {})
+                title = props.get("id") or props.get("title") or props.get("summary") or mem_n_id
+                nodes[mem_n_id] = {
+                    "id": mem_n_id,
+                    "label": f"{primary_label}: {title}",
+                    "group": primary_label,
+                    "title": f"<b>[Memory] {primary_label}</b>: {title}",
+                    "color": COLOR_MAP.get(primary_label, "#14B8A6"),
+                    "properties": props
+                }
+            if r and n and m:
+                mem_m_id = f"mem_{m.id}"
+                if mem_m_id in nodes:
+                    edges.append({
+                        "from": f"mem_{n.id}",
+                        "to": mem_m_id,
+                        "label": getattr(r, "relation", "MEMORY_REL"),
+                        "title": getattr(r, "relation", "MEMORY_REL")
+                    })
     except Exception:
         pass
 

@@ -5,7 +5,10 @@ Run:
 """
 import json
 
-import tools
+try:
+    import tools
+except ImportError:
+    from files import tools
 
 
 def run_checks():

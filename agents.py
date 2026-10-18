@@ -10,10 +10,18 @@ Track 02 Deep Optimization: Agent Memory & Multi-Agent Coordination Engine.
 import os
 import json
 from datetime import datetime, timezone
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from dotenv import load_dotenv
 
 import tools
+
+try:
+    from db import REPO as DEFAULT_REPO
+except ImportError:
+    try:
+        from files.db import REPO as DEFAULT_REPO
+    except ImportError:
+        DEFAULT_REPO = os.getenv("REPO_NAME", "acme_checkout")
 
 load_dotenv()
 
@@ -75,6 +83,57 @@ class AgentLLMWrapper:
         return fallback_text
 
 
+# rev1 (backend-parity): Risk level (HIGH/MEDIUM/LOW) is a *display severity* computed by
+# the Scout. The governance decision (BLOCKED/CONDITIONAL_APPROVAL/AUTO_APPROVED) is a
+# separate verdict owned by the Fixer, so incident-linked but playbook-mitigable changes
+# are not automatically blocked (matches the README benchmark scenario outcomes).
+#
+# rev1 (backend-generalization): compliance criticality is NO LONGER a hardcoded name set.
+# The Scout reads `blast_radius["compliance_critical"]` (Function.compliance_critical or a
+# compliance-critical Decision that JUSTIFIES the function, per the ingested data) and
+# exposes it as `scout_findings["compliance_critical"]`.
+
+
+def decide_governance_action(function: str, scout_findings: Dict[str, Any],
+                             consolidator_findings: Optional[Dict[str, Any]] = None) -> str:
+    """Derive the autonomous governance action from structured graph evidence.
+
+    Policy (rev1, data-driven):
+    - BLOCKED when a contractual promise protects the code, the function is
+      compliance-critical *per the graph data*, or it carries incident history with
+      no mitigating playbook while still showing a HIGH blast-radius hint.
+    - CONDITIONAL_APPROVAL when episodic memory links incidents to the function, or the
+      blast radius itself is non-trivial (risk_hint MEDIUM/HIGH).
+    - AUTO_APPROVED otherwise (no incidents, no callers, no protecting decisions).
+    """
+    blast = scout_findings.get("blast_radius") or {}
+    chain = scout_findings.get("decision_chain") or {}
+    memories = scout_findings.get("memories") or {}
+
+    incidents = memories.get("episodic_memory", {}).get("incidents_count", 0)
+    playbooks = memories.get("procedural_memory", {}).get("playbooks_count", 0)
+    risk_hint = blast.get("risk_hint", "LOW")
+    has_promise = bool(chain.get("has_contractual_promise"))
+    compliance_critical = bool(scout_findings.get("compliance_critical")
+                               or blast.get("compliance_critical"))
+
+    if consolidator_findings:
+        # Consolidator already synthesized tri-tier memory; prefer its playbook count.
+        playbooks = consolidator_findings.get("playbooks_count", playbooks)
+
+    if (
+        has_promise
+        or compliance_critical
+        or (incidents > 0 and playbooks == 0 and risk_hint == "HIGH")
+    ):
+        return "BLOCKED"
+
+    if incidents > 0 or risk_hint in ("MEDIUM", "HIGH"):
+        return "CONDITIONAL_APPROVAL"
+
+    return "AUTO_APPROVED"
+
+
 class ScoutAgent:
     """Risk & Discovery Agent (Track 01): Traverses FalkorDB knowledge & memory graphs."""
 
@@ -82,7 +141,8 @@ class ScoutAgent:
         self.llm = llm
         self.role = "Scout-Agent (Risk & Discovery)"
 
-    def investigate(self, pr_id: str, function: str, repo: str = "acme_checkout", session_id: str = "SES-DEFAULT") -> Dict[str, Any]:
+    def investigate(self, pr_id: str, function: str, repo: str = None, session_id: str = "SES-DEFAULT") -> Dict[str, Any]:
+        repo = repo or DEFAULT_REPO
         logs = []
 
         # Step 1: Blast Radius
@@ -104,15 +164,19 @@ class ScoutAgent:
             memories["episodic_memory"]["incidents_count"] > 0
         ) else "MEDIUM" if len(blast_radius.get("callers", [])) > 0 else "LOW"
 
+        # Data-driven compliance criticality (rev1 generalization: no hardcoded names).
+        compliance_critical = bool(blast_radius.get("compliance_critical"))
+
         # Synthesize Summary
         outages = memories["episodic_memory"]["past_incidents"]
         outage_str = f"Linked to past outage {outages[0]['incident_id']} (Loss: ${outages[0].get('loss_usd', 0):,})" if outages else "No past outages recorded."
         contract_str = "Contractual promise detected in CEO Slack communication." if decision_chain.get("has_contractual_promise") else "No contractual promises detected."
+        compliance_str = "Marked compliance-critical by graph data." if compliance_critical else "No compliance-critical markers."
 
         fallback_summary = (
             f"PR {pr_id} modifies '{function}' which has a multi-hop blast radius of "
             f"{len(blast_radius.get('callers', []))} upstream callers across "
-            f"{len(blast_radius.get('teams_affected', {}))} teams. {contract_str} {outage_str}"
+            f"{len(blast_radius.get('teams_affected', {}))} teams. {contract_str} {compliance_str} {outage_str}"
         )
 
         prompt = (
@@ -122,6 +186,7 @@ class ScoutAgent:
             f"- Teams affected: {list(blast_radius.get('teams_affected', {}).keys())}\n"
             f"- Protecting Decisions: {blast_radius.get('protecting_decisions')}\n"
             f"- Contractual Promise: {decision_chain.get('has_contractual_promise')}\n"
+            f"- Compliance Critical: {compliance_critical}\n"
             f"- Past Outages: {outages}\n"
             f"Provide a 2-3 sentence executive assessment explaining why risk is {risk_level}."
         )
@@ -148,6 +213,7 @@ class ScoutAgent:
                 "risk_level": risk_level,
                 "callers_count": len(blast_radius.get("callers", [])),
                 "has_contract": decision_chain.get("has_contractual_promise", False),
+                "compliance_critical": compliance_critical,
                 "incidents_count": memories["episodic_memory"]["incidents_count"]
             }
         )
@@ -158,6 +224,7 @@ class ScoutAgent:
             "pr_id": pr_id,
             "function": function,
             "risk_level": risk_level,
+            "compliance_critical": compliance_critical,
             "summary": summary,
             "blast_radius": blast_radius,
             "decision_chain": decision_chain,
@@ -257,7 +324,8 @@ class FixerAgent:
         self.llm = llm
         self.role = "Fixer-Agent (Governance & Remediation)"
 
-    def remediate(self, pr_id: str, function: str, scout_findings: Dict[str, Any], consolidator_findings: Dict[str, Any], repo: str = "acme_checkout", session_id: str = "SES-DEFAULT") -> Dict[str, Any]:
+    def remediate(self, pr_id: str, function: str, scout_findings: Dict[str, Any], consolidator_findings: Dict[str, Any], repo: str = None, session_id: str = "SES-DEFAULT") -> Dict[str, Any]:
+        repo = repo or DEFAULT_REPO
         logs = []
 
         # Step 1: Read consolidated state from Blackboard
@@ -267,24 +335,22 @@ class FixerAgent:
         # Step 2: Expert Centrality (Track 03)
         logs.append(f"Querying knowledge graph: find_true_expert('{function}')")
         expert_info = tools.find_true_expert(function)
-        recommended_reviewer = expert_info.get("recommended_reviewer", {})
-        assigned_name = recommended_reviewer.get("name", "Priya")
+        recommended_reviewer = expert_info.get("recommended_reviewer") or None
+        assigned_name = recommended_reviewer.get("name") if recommended_reviewer else None
+        if not assigned_name:
+            logs.append("No active domain expert found in the graph: reviewer assignment skipped.")
 
         # Step 3: Procedural & Semantic Memory
         memories = scout_findings.get("memories", {})
         playbooks = memories.get("procedural_memory", {}).get("playbooks", [])
         runbooks = memories.get("semantic_memory", {}).get("governing_docs", [])
 
-        # Step 4: Autonomous Governance Decision
-        if risk_level == "HIGH":
-            decision = "BLOCKED"
-        elif risk_level == "MEDIUM":
-            decision = "CONDITIONAL_APPROVAL"
-        else:
-            decision = "AUTO_APPROVED"
+        # Step 4: Autonomous Governance Decision (rev1: the decision is derived from rich
+        # graph evidence, decoupled from the display-only risk_level string).
+        decision = decide_governance_action(function, scout_findings, consolidator_findings)
 
-        logs.append(f"Executing autonomous governance action: block_or_approve_pr(decision='{decision}', reviewer='{assigned_name}')")
-        
+        logs.append(f"Executing autonomous governance action: block_or_approve_pr(decision='{decision}', reviewer='{assigned_name or 'unassigned'}')")
+
         gov_action = tools.block_or_approve_pr(
             pr_id=pr_id,
             function=function,
@@ -300,17 +366,25 @@ class FixerAgent:
             "Deploy behind a feature toggle"
         ]
 
+        if assigned_name:
+            reviewer_sentence = (
+                f"Assigned verified active expert {assigned_name} "
+                f"(Centrality: {(recommended_reviewer or {}).get('score', 0)}) "
+                f"over official lead {expert_info.get('official_owner', {}).get('lead')}."
+            )
+        else:
+            reviewer_sentence = "No active domain expert exists in the graph; reviewer assignment was skipped."
+
         fallback_remediation = (
             f"PR {pr_id} has been automatically {decision}. "
-            f"Assigned verified active expert {assigned_name} (Centrality: {recommended_reviewer.get('score', 0)}) "
-            f"over official lead {expert_info.get('official_owner', {}).get('lead')}. "
+            f"{reviewer_sentence} "
             f"Flagged {len(gov_action.get('flagged_stale_docs', []))} governing documentation node(s) as STALE."
         )
 
         prompt = (
             f"Explain autonomous governance action for PR {pr_id} on function '{function}'.\n"
             f"Decision: {decision}\n"
-            f"Assigned Reviewer: {assigned_name} (Reason: active expert vs departed Bob)\n"
+            f"Assigned Reviewer: {assigned_name or 'none (no active expert)'}\n"
             f"Playbook steps required: {steps}\n"
             f"Stale Docs: {gov_action.get('flagged_stale_docs')}\n"
             f"Write a concise 2-sentence explanation of the action taken and next steps."
@@ -324,10 +398,10 @@ class FixerAgent:
             from_agent="Fixer-Agent",
             to_agent="Consolidator-Agent",
             phase="GOVERNANCE_EXECUTION",
-            message=f"PR {pr_id} marked as {decision}. Assigned reviewer {assigned_name}. Stale docs flagged: {len(gov_action.get('flagged_stale_docs', []))}.",
+            message=f"PR {pr_id} marked as {decision}. Assigned reviewer {assigned_name or 'unassigned'}. Stale docs flagged: {len(gov_action.get('flagged_stale_docs', []))}.",
             payload={
                 "decision": decision,
-                "reviewer": assigned_name,
+                "reviewer": assigned_name or "unassigned",
                 "flagged_docs_count": len(gov_action.get("flagged_stale_docs", [])),
                 "steps_required": len(steps)
             }
@@ -358,7 +432,8 @@ class GovernanceOrchestrator:
         self.consolidator = MemoryConsolidatorAgent(self.llm)
         self.fixer = FixerAgent(self.llm)
 
-    def simulate_pr(self, pr_id: str = "PR-904", target_function: str = "applyDiscount", repo: str = "acme_checkout") -> Dict[str, Any]:
+    def simulate_pr(self, pr_id: str = "PR-904", target_function: str = "applyDiscount", repo: str = None) -> Dict[str, Any]:
+        repo = repo or DEFAULT_REPO
         session_id = f"SES-{pr_id}-{int(datetime.now(timezone.utc).timestamp())}"
         timeline = []
 

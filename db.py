@@ -15,6 +15,10 @@ load_dotenv(dotenv_path=env_path)
 PREFIX = os.getenv("GRAPH_PREFIX", "dev")
 REPO = os.getenv("REPO_NAME", "acme_checkout")
 
+# Folder searched by ingest.py for optional Slack/Jira/mapping/compliance JSON files
+# (default: the folder containing company.json). Consumed by seed.py's ingest_dir().
+INGEST_INPUT_DIR = os.getenv("INGEST_INPUT_DIR", ".")
+
 
 @lru_cache(maxsize=1)
 def client():

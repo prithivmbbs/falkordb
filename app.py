@@ -15,6 +15,7 @@ import tools
 import agents
 from agents import GovernanceOrchestrator
 import seed
+import api
 
 # ──────────────────────────────────────────────────────────────
 # 1. Page Configuration
@@ -1541,39 +1542,65 @@ SCENARIOS = {
     }
 }
 
-FN_METADATA = {
-    # acme_checkout
-    "applyDiscount": {"tenant": "acme_checkout", "pr_id": "PR-904", "scenario_key": "1. PR-904 -> applyDiscount (Checkout Outage Risk)"},
-    "chargeStripeInvoice": {"tenant": "acme_checkout", "pr_id": "PR-512", "scenario_key": "2. PR-512 -> chargeStripeInvoice (Stripe Retry Race)"},
-    "renderCart": {"tenant": "acme_checkout", "pr_id": "PR-108", "scenario_key": "3. PR-108 -> renderCart (UI Promo Banner)"},
-    "refundOrder": {"tenant": "acme_checkout", "pr_id": "PR-770", "scenario_key": "5. PR-770 -> refundOrder (Batch Refund Pipeline)"},
-    "rateLimitRedisBucket": {"tenant": "acme_checkout", "pr_id": "PR-610", "scenario_key": "7. PR-610 -> rateLimitRedisBucket (Infra Eviction)"},
-    "calculateTotal": {"tenant": "acme_checkout", "pr_id": "PR-102", "scenario_key": None},
-    "checkout": {"tenant": "acme_checkout", "pr_id": "PR-101", "scenario_key": None},
-    "circuitBreaker": {"tenant": "acme_checkout", "pr_id": "PR-104", "scenario_key": None},
+@st.cache_data(ttl=10)
+def _load_discovered_tenants():
+    try:
+        data = api.get_tenants()
+        return data.get("tenants", [])
+    except Exception:
+        return []
 
-    # acme_auth
-    "verifyJwtToken": {"tenant": "acme_auth", "pr_id": "PR-401", "scenario_key": "4. PR-401 -> verifyJwtToken (Multi-Tenant Auth)"},
-    "rotateSigningKey": {"tenant": "acme_auth", "pr_id": "PR-402", "scenario_key": None},
-    "invalidateSessions": {"tenant": "acme_auth", "pr_id": "PR-403", "scenario_key": None},
-    "enforceMfaPolicy": {"tenant": "acme_auth", "pr_id": "PR-404", "scenario_key": None},
+discovered_tenants = _load_discovered_tenants()
+TENANT_DISPLAY_NAMES = {t["id"]: t.get("name", t["id"]) for t in discovered_tenants}
+TENANT_FUNCTIONS = {t["id"]: t.get("functions", []) for t in discovered_tenants}
 
-    # acme_data
-    "hardDeleteAccount": {"tenant": "acme_data", "pr_id": "PR-330", "scenario_key": "6. PR-330 -> hardDeleteAccount (GDPR Non-Compliance)"},
-    "encryptPiiField": {"tenant": "acme_data", "pr_id": "PR-350", "scenario_key": "8. PR-350 -> encryptPiiField (Legacy Cipher Crash)"},
-    "exportUserData": {"tenant": "acme_data", "pr_id": "PR-301", "scenario_key": None},
-    "auditLogEvent": {"tenant": "acme_data", "pr_id": "PR-302", "scenario_key": None},
-}
+# Graceful fallback if FalkorDB is initializing or empty
+if not TENANT_FUNCTIONS:
+    TENANT_FUNCTIONS = {
+        "acme_checkout": ["applyDiscount", "chargeStripeInvoice", "renderCart", "refundOrder", "rateLimitRedisBucket", "calculateTotal", "checkout", "circuitBreaker"],
+        "acme_auth": ["verifyJwtToken", "rotateSigningKey", "invalidateSessions", "enforceMfaPolicy"],
+        "acme_data": ["hardDeleteAccount", "encryptPiiField", "exportUserData", "auditLogEvent"],
+    }
+    TENANT_DISPLAY_NAMES = {
+        "acme_checkout": "Acme Checkout & Billing",
+        "acme_auth": "Acme Auth & Identity",
+        "acme_data": "Acme Data Governance",
+    }
+
+# Build FN_METADATA dynamically:
+FN_METADATA = {}
+for t_id, fns in TENANT_FUNCTIONS.items():
+    for fn in fns:
+        FN_METADATA[fn] = {
+            "tenant": t_id,
+            "pr_id": f"PR-{abs(hash(fn)) % 900 + 100}",
+            "scenario_key": None
+        }
+
+# Overlay known benchmark scenarios
+for s_key, s_data in SCENARIOS.items():
+    fn_name = s_data["function"]
+    FN_METADATA[fn_name] = {
+        "tenant": s_data["tenant"],
+        "pr_id": s_data["pr_id"],
+        "scenario_key": s_key
+    }
+
+tenant_options = list(TENANT_FUNCTIONS.keys())
+default_tenant = "acme_checkout" if "acme_checkout" in tenant_options else (tenant_options[0] if tenant_options else "acme_checkout")
+default_fns = TENANT_FUNCTIONS.get(default_tenant, [])
+default_fn = "applyDiscount" if "applyDiscount" in default_fns else (default_fns[0] if default_fns else "applyDiscount")
+default_pr = FN_METADATA.get(default_fn, {}).get("pr_id", "PR-904")
 
 # State synchronization for sidebar parameters
 if "sb_scenario" not in st.session_state:
     st.session_state["sb_scenario"] = list(SCENARIOS.keys())[0]
-if "sb_tenant" not in st.session_state:
-    st.session_state["sb_tenant"] = "acme_checkout"
-if "sb_fn" not in st.session_state:
-    st.session_state["sb_fn"] = "applyDiscount"
+if "sb_tenant" not in st.session_state or st.session_state["sb_tenant"] not in tenant_options:
+    st.session_state["sb_tenant"] = default_tenant
+if "sb_fn" not in st.session_state or st.session_state["sb_fn"] not in TENANT_FUNCTIONS.get(st.session_state["sb_tenant"], []):
+    st.session_state["sb_fn"] = default_fn
 if "sb_pr_id" not in st.session_state:
-    st.session_state["sb_pr_id"] = "PR-904"
+    st.session_state["sb_pr_id"] = default_pr
 
 def _reset_copilot_and_sim():
     st.session_state.pop("chat_history", None)
@@ -1582,10 +1609,11 @@ def _reset_copilot_and_sim():
     st.session_state.pop("sim_key", None)
 
 def _on_scenario_change():
-    scen = SCENARIOS[st.session_state["sb_scenario"]]
-    st.session_state["sb_tenant"] = scen["tenant"]
-    st.session_state["sb_fn"] = scen["function"]
-    st.session_state["sb_pr_id"] = scen["pr_id"]
+    scen = SCENARIOS.get(st.session_state.get("sb_scenario"))
+    if scen:
+        st.session_state["sb_tenant"] = scen["tenant"]
+        st.session_state["sb_fn"] = scen["function"]
+        st.session_state["sb_pr_id"] = scen["pr_id"]
     _reset_copilot_and_sim()
 
 def _on_copilot_scen_change():
@@ -1595,13 +1623,15 @@ def _on_copilot_scen_change():
 
 def _on_tenant_change():
     new_t = st.session_state["sb_tenant"]
-    fns = [f for f, m in FN_METADATA.items() if m["tenant"] == new_t]
-    if st.session_state.get("sb_fn") not in fns:
+    fns = TENANT_FUNCTIONS.get(new_t, [])
+    if not fns:
+        fns = [f for f, m in FN_METADATA.items() if m.get("tenant") == new_t]
+    if st.session_state.get("sb_fn") not in fns and fns:
         new_f = fns[0]
         st.session_state["sb_fn"] = new_f
-        meta = FN_METADATA[new_f]
-        st.session_state["sb_pr_id"] = meta["pr_id"]
-        if meta["scenario_key"]:
+        meta = FN_METADATA.get(new_f, {})
+        st.session_state["sb_pr_id"] = meta.get("pr_id", "PR-100")
+        if meta.get("scenario_key"):
             st.session_state["sb_scenario"] = meta["scenario_key"]
     _reset_copilot_and_sim()
 
@@ -1609,7 +1639,7 @@ def _on_fn_change():
     new_f = st.session_state["sb_fn"]
     meta = FN_METADATA.get(new_f, {})
     if meta:
-        st.session_state["sb_pr_id"] = meta["pr_id"]
+        st.session_state["sb_pr_id"] = meta.get("pr_id", "PR-100")
         if meta.get("scenario_key"):
             st.session_state["sb_scenario"] = meta["scenario_key"]
     _reset_copilot_and_sim()
@@ -1644,18 +1674,22 @@ with st.sidebar:
     st.markdown('<div style="height:14px;"></div>', unsafe_allow_html=True)
     st.markdown('<div class="pplx-card-label" style="margin-bottom:8px;">TARGET</div>', unsafe_allow_html=True)
 
-    tenant_options = ["acme_checkout", "acme_auth", "acme_data"]
+    tenant_options = list(TENANT_FUNCTIONS.keys())
+    curr_t_idx = tenant_options.index(st.session_state["sb_tenant"]) if st.session_state.get("sb_tenant") in tenant_options else 0
     tenant = st.selectbox(
         "Tenant repository",
         options=tenant_options,
+        index=curr_t_idx,
         key="sb_tenant",
         on_change=_on_tenant_change
     )
 
-    available_fns = [f for f, m in FN_METADATA.items() if m["tenant"] == tenant]
+    available_fns = TENANT_FUNCTIONS.get(tenant, [f for f, m in FN_METADATA.items() if m.get("tenant") == tenant])
+    curr_f_idx = available_fns.index(st.session_state["sb_fn"]) if st.session_state.get("sb_fn") in available_fns else 0
     selected_fn = st.selectbox(
         "Target function",
         options=available_fns,
+        index=curr_f_idx,
         key="sb_fn",
         on_change=_on_fn_change
     )
@@ -1664,6 +1698,7 @@ with st.sidebar:
         "Pull Request ID",
         key="sb_pr_id"
     )
+
 
 
 
@@ -1791,12 +1826,12 @@ def _distill_why(sim_dict: dict, fn_name: str) -> str:
 # ╚══════════════════════════════════════════════════════════════╝
 if st.session_state["nav_section"] == "overview":
 
-    dec = sim["decision"]
-    risk = sim["risk_level"]
-    risk_color = "#b83a2b" if risk == "HIGH" else "#8a6100" if risk == "MEDIUM" else "#016a71"
-    reviewer = sim["assigned_reviewer"]
-    stale_docs = sim["fixer_action"]["action_result"].get("flagged_stale_docs", [])
-    explanation = sim["fixer_action"]["explanation"]
+    dec = sim.get("decision", "BLOCKED")
+    risk = sim.get("risk_level", "HIGH")
+    risk_color = "#b83a2b" if risk in ["HIGH", "CRITICAL"] else "#8a6100" if risk == "MEDIUM" else "#016a71"
+    reviewer = sim.get("assigned_reviewer") or "Unassigned"
+    stale_docs = sim.get("fixer_action", {}).get("action_result", {}).get("flagged_stale_docs") or []
+    explanation = sim.get("fixer_action", {}).get("explanation", "")
     why_sentence = _distill_why(sim, selected_fn)
 
     # Memories & Decisions from graph simulation
@@ -1805,7 +1840,7 @@ if st.session_state["nav_section"] == "overview":
 
     if incidents:
         inc = incidents[0]
-        loss_val = inc.get('loss_usd', 0)
+        loss_val = inc.get('loss_usd') or 0
         inc_loss_str = f"${loss_val//1000}K" if loss_val >= 1000 else f"${loss_val}"
         inc_label = f"{inc.get('incident_id', 'Incident')} ({inc_loss_str})"
         node3_subtitle = "Critical Repeat Risk"
@@ -1927,10 +1962,10 @@ if st.session_state["nav_section"] == "overview":
     """
     st.markdown(textwrap.dedent(telemetry_html).strip(), unsafe_allow_html=True)
 
-    # ── 4. Animated Architecture Pathway SVG ──
     verdict_title = dec.replace('_', ' ').title()
+    reviewer_role_title = "Verified Expert" if reviewer != "Unassigned" else "Security Board"
     svg_html = f"""<div class="kindred-scene-card" id="architecture-scene">
-<svg viewBox="0 0 1000 240" width="100%" height="auto" style="display:block;">
+<svg viewBox="0 0 1000 240" style="width: 100%; height: auto; display: block;">
 <defs>
 <linearGradient id="gradCelestial1" x1="0%" y1="0%" x2="100%" y2="0%">
 <stop offset="0%" stop-color="#88acd8" />
@@ -1983,7 +2018,7 @@ if st.session_state["nav_section"] == "overview":
 <circle cx="860" cy="118" r="48" fill="#ffffff" stroke="#7ecde0" stroke-width="2.5" />
 <circle cx="860" cy="118" r="39" fill="#eaf9fb" />
 <text x="860" y="109" text-anchor="middle" dominant-baseline="central" font-family="'Plus Jakarta Sans', sans-serif" font-weight="700" font-size="11.5" fill="#0e7d8c">{reviewer}</text>
-<text x="860" y="127" text-anchor="middle" dominant-baseline="central" font-family="'Inter', sans-serif" font-weight="600" font-size="9" fill="#0e7d8c">Verified Expert</text>
+<text x="860" y="127" text-anchor="middle" dominant-baseline="central" font-family="'Inter', sans-serif" font-weight="600" font-size="9" fill="#0e7d8c">{reviewer_role_title}</text>
 <text x="860" y="184" text-anchor="middle" dominant-baseline="central" font-family="'Plus Jakarta Sans', sans-serif" font-weight="700" font-size="13" fill="#16332a">Governance Gate</text>
 <text x="860" y="202" text-anchor="middle" dominant-baseline="central" font-family="'Inter', sans-serif" font-weight="500" font-size="11" fill="#0e7d8c">{verdict_title}</text>
 </g>
@@ -2049,7 +2084,7 @@ if st.session_state["nav_section"] == "overview":
             <div style="text-align: right;">
                 <div class="pplx-card-label">ASSIGNED REVIEWER</div>
                 <div style="font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; color: var(--color-deep-teal);">{reviewer}</div>
-                <div style="font-size: 0.75rem; color: #6e6c66;">FalkorDB Verified Expert</div>
+                <div style="font-size: 0.75rem; color: #6e6c66;">{'FalkorDB Verified Expert' if reviewer != 'Unassigned' else 'No Active Domain Expert'}</div>
             </div>
         </div>
         <div class="stat-row" style="border-top: 1px solid rgba(0, 0, 0, 0.06); padding-top: 12px; margin-top: 8px;">
@@ -2064,7 +2099,7 @@ if st.session_state["nav_section"] == "overview":
     """).strip(), unsafe_allow_html=True)
 
     # "What happens next" expander
-    playbook_steps = sim["fixer_action"]["playbook_steps"]
+    playbook_steps = sim.get("fixer_action", {}).get("playbook_steps") or []
     with st.expander("Required Playbook Steps Before Merge", expanded=(dec == "BLOCKED")):
         st.markdown(f"**Remediation Directive:** {explanation}")
         st.markdown("**Required playbook steps:**")
@@ -2247,7 +2282,7 @@ elif st.session_state["nav_section"] == "graph":
           "gravitationalConstant": -160,
           "centralGravity": 0.012,
           "springLength": 210,
-          "springStrength": 0.07,
+          "springConstant": 0.07,
           "damping": 0.90,
           "avoidOverlap": 1.0
         },
@@ -2307,15 +2342,22 @@ elif st.session_state["nav_section"] == "graph":
     col_exp, col_blast = st.columns(2)
 
     with col_exp:
-        exp_info = sim["fixer_action"]["expert_info"]
+        exp_info = sim.get("fixer_action", {}).get("expert_info", {})
         lead_data = exp_info.get("official_owner", {})
-        reviewer = sim["assigned_reviewer"]
+        reviewer = sim.get("assigned_reviewer") or "Unassigned"
         ranked_html = ""
         for exp in exp_info.get("ranked_experts", [])[:3]:
-            status_text = "Active" if exp["active"] else "Departed"
-            is_assigned = "&bull; <span style='color:var(--color-deep-teal); font-weight:500;'>Assigned</span>" if exp["name"] == reviewer else ""
-            status_color = "var(--color-deep-teal)" if exp["active"] else "var(--color-ash)"
-            ranked_html += f'<div style="margin-bottom: 8px; font-size: 0.8125rem;"><div style="display: flex; justify-content: space-between; align-items: baseline;"><span><b>{exp["name"]}</b> <code>{exp["score"]}</code> &bull; <span style="color: {status_color};">{status_text}</span> {is_assigned}</span></div><div style="font-size: 0.75rem; color: var(--color-graphite); margin-top: 2px;">commits: {exp["commits"]} | reviews: {exp["reviews"]}</div></div>'
+            status_text = "Active" if exp.get("active") else "Departed"
+            is_assigned = "&bull; <span style='color:var(--color-deep-teal); font-weight:500;'>Assigned</span>" if exp.get("name") == reviewer else ""
+            status_color = "var(--color-deep-teal)" if exp.get("active") else "var(--color-ash)"
+            ranked_html += f'<div style="margin-bottom: 8px; font-size: 0.8125rem;"><div style="display: flex; justify-content: space-between; align-items: baseline;"><span><b>{exp.get("name", "Unknown")}</b> <code>{exp.get("score", 0)}</code> &bull; <span style="color: {status_color};">{status_text}</span> {is_assigned}</span></div><div style="font-size: 0.75rem; color: var(--color-graphite); margin-top: 2px;">commits: {exp.get("commits", 0)} | reviews: {exp.get("reviews", 0)}</div></div>'
+
+        if not ranked_html:
+            ranked_html = '<div style="font-size: 0.8125rem; color: var(--color-graphite); padding: 4px 0;">No commit or PR review history found for this function.</div>'
+
+        nom_lead = lead_data.get('lead') or 'Unspecified Lead'
+        nom_team = lead_data.get('team') or tenant
+        nom_score = lead_data.get('lead_knowledge_score') or 0
 
         st.markdown(textwrap.dedent(f"""
         <div class="pplx-card">
@@ -2325,7 +2367,7 @@ elif st.session_state["nav_section"] == "graph":
                 The graph finds who actually fixed this code recently — which may differ from the nominal team lead.
             </div>
             <div style="font-size: 0.875rem; margin-bottom: 12px; color: var(--color-ink);">
-                Nominal Lead: <code>{lead_data.get('lead')}</code> ({lead_data.get('team')}) &mdash; Score: <code>{lead_data.get('lead_knowledge_score')}</code>
+                Nominal Lead: <code>{nom_lead}</code> ({nom_team}) &mdash; Score: <code>{nom_score}</code>
             </div>
             <div style="border-top: 1px solid var(--color-warm-mist); padding-top: 10px;">
                 <div class="pplx-card-label">Ranked by recent contributions</div>
@@ -2383,12 +2425,12 @@ elif st.session_state["nav_section"] == "agents":
     """, unsafe_allow_html=True)
 
     # Build data-driven findings for each agent
-    callers = sim["scout_findings"]["blast_radius"].get("callers", [])
-    incidents = sim["scout_findings"]["memories"]["episodic_memory"].get("past_incidents", [])
-    decisions = sim["scout_findings"]["decision_chain"].get("justifying_decisions", [])
-    reviewer_name = sim["assigned_reviewer"]
-    verdict_name = sim['decision'].replace('_', ' ').title()
-    steps = sim["fixer_action"]["playbook_steps"]
+    callers = sim.get("scout_findings", {}).get("blast_radius", {}).get("callers", [])
+    incidents = sim.get("scout_findings", {}).get("memories", {}).get("episodic_memory", {}).get("past_incidents", [])
+    decisions = sim.get("scout_findings", {}).get("decision_chain", {}).get("justifying_decisions", [])
+    reviewer_name = sim.get("assigned_reviewer") or "Unassigned"
+    verdict_name = sim.get('decision', 'BLOCKED').replace('_', ' ').title()
+    steps = sim.get("fixer_action", {}).get("playbook_steps", [])
 
     scout_leaves = [
         f"Found {len(callers)} downstream caller{'s' if len(callers) != 1 else ''} in blast radius",
@@ -2404,15 +2446,29 @@ elif st.session_state["nav_section"] == "agents":
     else:
         scout_leaves.append("Zero past outages &mdash; clean historical record")
 
-    consolidator_leaves = [
-        "Synthesized incident, procedural, and topology subgraphs",
-        f"Verified tenant isolation boundaries for {tenant}",
-        "Committed unified evidence token to FalkorDB blackboard"
-    ]
+    cross_data = sim.get("consolidator_findings", {}).get("cross_tenant_data", {})
+    if cross_data.get("has_cross_tenant_risk"):
+        bridged = ", ".join(cross_data.get("bridged_tenants", []))
+        consolidator_leaves = [
+            f"Cross-tenant bridge: <strong>{bridged}</strong>",
+            "Synthesized incident, procedural, and topology subgraphs",
+            "Committed unified evidence token to FalkorDB blackboard"
+        ]
+    else:
+        consolidator_leaves = [
+            "Synthesized incident, procedural, and topology subgraphs",
+            f"Verified tenant isolation boundaries for {tenant}",
+            "Committed unified evidence token to FalkorDB blackboard"
+        ]
+
+    if reviewer_name != "Unassigned":
+        fixer_reviewer_leaf = f"Assigned {reviewer_name} based on author expertise centrality"
+    else:
+        fixer_reviewer_leaf = "No active author in graph; escalated to security committee"
 
     fixer_leaves = [
-        f"Assigned {reviewer_name} based on author expertise centrality",
-        f"Governance Gate: {verdict_name} ({sim['risk_level']} risk)",
+        fixer_reviewer_leaf,
+        f"Governance Gate: {verdict_name} ({sim.get('risk_level', 'HIGH')} risk)",
         f"Generated {len(steps)} mandatory pre-merge playbook steps"
     ]
 
@@ -2424,7 +2480,7 @@ elif st.session_state["nav_section"] == "agents":
     if incidents:
         inc_items_html = ""
         for inc in incidents:
-            loss_val = inc.get("loss_usd", 0)
+            loss_val = inc.get("loss_usd") or 0
             loss_fmt = f"${loss_val//1000}K" if loss_val >= 1000 else f"${loss_val}"
             inc_items_html += f'''
             <div class="mindmap-leaf" style="flex-direction: column; align-items: flex-start; gap: 4px; padding: 8px 12px;">
@@ -2617,7 +2673,7 @@ elif st.session_state["nav_section"] == "copilot":
 
     # ── Active Connected Context Header Card ──
     dec = sim.get("decision", "BLOCKED")
-    reviewer = sim.get("assigned_reviewer", "Verified Contributor")
+    reviewer = sim.get("assigned_reviewer") or "Unassigned"
     risk = sim.get("risk_level", "HIGH")
     explanation = sim.get("fixer_action", {}).get("explanation", "")
     playbook = sim.get("fixer_action", {}).get("playbook_steps", [])
@@ -2670,7 +2726,7 @@ elif st.session_state["nav_section"] == "copilot":
 
     if incidents:
         first_inc = incidents[0]
-        loss_val = first_inc.get("loss_usd", 0)
+        loss_val = first_inc.get("loss_usd") or 0
         loss_str = f" (${loss_val:,})" if loss_val else ""
         chip3_label = f"Explain incident {first_inc.get('incident_id')}{loss_str}"
     elif decisions:
@@ -2721,7 +2777,7 @@ elif st.session_state["nav_section"] == "copilot":
                     reasons.append(f"Decision `{d.get('decision_id')}` (*{d.get('summary', '').rstrip('.')}*)")
                 if incidents:
                     inc = incidents[0]
-                    loss = inc.get("loss_usd", 0)
+                    loss = inc.get("loss_usd") or 0
                     loss_str = f" causing a **${loss:,} outage loss**" if loss else ""
                     reasons.append(f"Incident `{inc.get('incident_id')}` ({inc.get('summary', '')}{loss_str})")
 
@@ -2732,10 +2788,11 @@ elif st.session_state["nav_section"] == "copilot":
                 )
             elif dec == "CONDITIONAL_APPROVAL":
                 steps_txt = "; ".join(playbook[:2]) if playbook else "required safety validations"
+                assigned_msg = f"**Reviewer Assigned:** `{reviewer}` per historical incident resolution centrality." if reviewer != "Unassigned" else "**Reviewer Assigned:** Escalated to Security / Architecture Board (no active author in graph)."
                 ans = (
                     f"{label}\n\n`PR {pr_id}` received **CONDITIONAL APPROVAL** (Risk: **{risk}**). "
                     f"Modifying `{selected_fn}()` touches active services. Before merge, author must complete: {steps_txt}.\n\n"
-                    f"**Reviewer Assigned:** `{reviewer}` per historical incident resolution centrality."
+                    f"{assigned_msg}"
                 )
             else:
                 ans = (
@@ -2745,27 +2802,28 @@ elif st.session_state["nav_section"] == "copilot":
         elif any(w in q_lower for w in ["expert", "who", "lead", "reviewer"]):
             label = '<span class="copilot-label">Expertise Centrality</span>'
             lead_data = exp_info.get("official_owner", {})
-            lead_name = lead_data.get("lead", "Official Lead")
-            lead_team = lead_data.get("team", "Core Team")
-            lead_score = lead_data.get("lead_knowledge_score", 0)
+            lead_name = lead_data.get("lead") or "Official Lead"
+            lead_team = lead_data.get("team") or tenant
+            lead_score = lead_data.get("lead_knowledge_score") or 0
             ranked = exp_info.get("ranked_experts", [])
 
             details = []
             for exp in ranked[:3]:
                 st_text = "active" if exp.get("active") else "departed"
-                details.append(f"- **{exp['name']}** (Score: `{exp['score']}`, {st_text}, {exp.get('commits', 0)} commits, {exp.get('reviews', 0)} reviews)")
+                details.append(f"- **{exp.get('name', 'Unknown')}** (Score: `{exp.get('score', 0)}`, {st_text}, {exp.get('commits', 0)} commits, {exp.get('reviews', 0)} reviews)")
 
             ranked_list = "\n".join(details) if details else "- No previous committer history recorded."
+            assigned_lead_msg = f"NexusGuard auto-assigned **`{reviewer}`** to review PR `{pr_id}`." if reviewer != "Unassigned" else f"No active domain expert identified in graph; escalated PR `{pr_id}` to security review board."
             ans = (
                 f"{label}\n\nNominal team lead `{lead_name}` ({lead_team}) has knowledge score of `{lead_score}`. "
                 f"FalkorDB computed graph centrality over recency-weighted commits and past incident responses:\n\n{ranked_list}\n\n"
-                f"NexusGuard auto-assigned **`{reviewer}`** to review PR `{pr_id}`."
+                f"{assigned_lead_msg}"
             )
         elif any(w in q_lower for w in ["incident", "outage", "loss", "broke", "history"]):
             label = '<span class="copilot-label">Incident Memory</span>'
             if incidents:
                 inc = incidents[0]
-                loss = inc.get("loss_usd", 0)
+                loss = inc.get("loss_usd") or 0
                 loss_str = f" causing a **${loss:,} outage loss**" if loss else ""
                 ans = (
                     f"{label}\n\n**Incident `{inc.get('incident_id')}` ({inc.get('date', 'Historical')}):**\n\n"
@@ -2793,15 +2851,17 @@ elif st.session_state["nav_section"] == "copilot":
             label = '<span class="copilot-label">Blast Radius Analysis</span>'
             if callers:
                 caller_items = "\n".join([f"- `{c['call_path']}` (hops: {c['hops']})" for c in callers[:6]])
+                verify_msg = f"Assigned reviewer `{reviewer}` must verify backward compatibility for these call paths." if reviewer != "Unassigned" else "Author and team must verify backward compatibility for these call paths."
                 ans = (
                     f"{label}\n\nModifying `{selected_fn}()` affects **{len(callers)} downstream caller(s)** across repository `{tenant}`:\n\n"
                     f"{caller_items}\n\n"
-                    f"Assigned reviewer `{reviewer}` must verify backward compatibility for these call paths."
+                    f"{verify_msg}"
                 )
             else:
                 ans = f"{label}\n\n`{selected_fn}()` is an **isolated leaf function** with zero downstream callers. Blast radius is completely contained."
         else:
             label = '<span class="copilot-label">Graph Summary</span>'
+            reviewer_stat = f"`{reviewer}`" if reviewer != "Unassigned" else "`No Active Expert (Escalated)`"
             ans = (
                 f"{label}\n\n"
                 f"- **Function:** `{selected_fn}()` in `{tenant}`\n"
@@ -2809,13 +2869,47 @@ elif st.session_state["nav_section"] == "copilot":
                 f"- **Impacted Callers:** {len(callers)}\n"
                 f"- **Past Outages in Memory:** {len(incidents)}\n"
                 f"- **Governing Decisions:** {len(decisions)}\n"
-                f"- **Verified Expert Reviewer:** `{reviewer}`\n"
+                f"- **Verified Expert Reviewer:** {reviewer_stat}\n"
                 f"- **Governance Verdict:** `{dec}` (Risk: `{risk}`)"
             )
 
         st.session_state["chat_history"].append({"role": "assistant", "content": ans})
         with st.chat_message("assistant"):
             st.markdown(ans, unsafe_allow_html=True)
+
+    # ── Memory Consolidation Action ──
+    st.markdown('<div style="height: 16px;"></div>', unsafe_allow_html=True)
+    with st.expander("Consolidate New Learning (FalkorDB Memory Engine)", expanded=False):
+        st.markdown('<div class="pplx-card-label" style="color: var(--color-deep-teal); margin-bottom: 6px;">POST-INCIDENT / MERGE LEARNING CONSOLIDATION</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="font-size: 0.8125rem; color: var(--color-graphite); margin-bottom: 12px;">Record institutional memory, incident postmortems, or new operational procedures directly into <code>dev_memory_{tenant}</code>.</div>', unsafe_allow_html=True)
+
+        col_l1, col_l2 = st.columns([1, 1])
+        with col_l1:
+            new_inc_id = st.text_input("Incident / Finding ID", value=f"I-{abs(hash(selected_fn)) % 900 + 100}", key=f"cons_inc_id_{current_key}")
+            new_loss = st.number_input("Incident Outage Loss (USD)", min_value=0, value=0, step=1000, key=f"cons_loss_{current_key}")
+            new_summary = st.text_input("Memory Summary / Root Cause", value=f"Post-merge observation regarding {selected_fn}() resilience under load.", key=f"cons_summary_{current_key}")
+        with col_l2:
+            new_pb_title = st.text_input("Remediation Playbook Title", value=f"{selected_fn}() Verification & Safety Playbook", key=f"cons_pb_title_{current_key}")
+            new_pb_steps_raw = st.text_area("Playbook Steps (one per line)", value=f"Verify backward compatibility of {selected_fn}()\nRun shadow integration replay in staging\nMonitor metrics for 24h post deployment", key=f"cons_pb_steps_{current_key}")
+
+        if st.button("Consolidate Learning into Memory Graph", key=f"btn_consolidate_{current_key}", type="secondary"):
+            steps_list = [s.strip() for s in new_pb_steps_raw.splitlines() if s.strip()]
+            try:
+                res_cons = tools.consolidate_new_learning(
+                    repo=tenant,
+                    function=selected_fn,
+                    incident_id=new_inc_id,
+                    summary=new_summary,
+                    loss_usd=int(new_loss),
+                    playbook_title=new_pb_title,
+                    playbook_steps=steps_list
+                )
+                st.success(f"Successfully consolidated learning `{new_inc_id}` into `dev_memory_{tenant}`! Graph memory updated.")
+                st.session_state.pop("sim_data", None)
+                st.session_state.pop("sim_key", None)
+                st.rerun()
+            except Exception as e:
+                st.error(f"Error consolidating learning: {e}")
 
 
 # ──────────────────────────────────────────────────────────────

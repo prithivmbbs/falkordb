@@ -1,0 +1,19 @@
+{
+  "slack_to_functions": {"1760000000.000100": ["applyDiscount"]},
+  "slack_to_tickets": {"1760000000.000100": "EX-1"},
+  "slack_mentions": {"1760000000.000100": ["bob"]},
+  "slack_authors": {"1760000000.000100": "dev"},
+  "jira_to_functions": {"EX-1": ["applyDiscount"]},
+  "jira_to_slack": {"EX-1": ["1760000000.000100"]},
+  "decision_rules": [
+    {
+      "id": "D-EX-1",
+      "summary": "Discount branch must stay until the client contract renewal window closes.",
+      "date": "2025-03-12",
+      "justifies": ["applyDiscount"],
+      "decided_in_slack": ["1760000000.000100"],
+      "decided_in_ticket": ["EX-1"],
+      "compliance_critical": false
+    }
+  ]
+}

@@ -4,6 +4,8 @@ Exposes autonomous graph-backed engineering governance tools over Model Context 
 Run standalone (stdio transport):
     python mcp_server.py
 """
+import sys
+
 try:
     from mcp.server.fastmcp import FastMCP
 except ImportError:
@@ -12,7 +14,13 @@ except ImportError:
     except ImportError:
         FastMCP = None
 
-import tools
+try:
+    import tools
+except ImportError:
+    try:
+        from files import tools
+    except ImportError:
+        from mcp_server import tools
 
 if FastMCP is None:
     raise ImportError(
@@ -49,13 +57,13 @@ def get_decision_chain(function: str) -> dict:
 
 
 @mcp.tool()
-def get_memory_context(function: str) -> dict:
-    """Retrieve multi-tier agent memory for this function:
+def get_memory_context(function: str, repo: str = "acme_checkout") -> dict:
+    """Retrieve multi-tier agent memory for this function from a specific tenant repo:
     1. Episodic: past outages, financial losses, and regressions.
     2. Procedural: safe migration playbooks and sequential checklists.
     3. Semantic: official runbooks and documentation.
     """
-    return tools.get_memory_context(function)
+    return tools.get_memory_context(function, repo=repo)
 
 
 @mcp.tool()

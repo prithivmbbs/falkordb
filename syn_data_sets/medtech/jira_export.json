@@ -1,0 +1,35 @@
+{
+  "issues": [
+    {
+      "key": "MT-101",
+      "fields": {
+        "summary": "HIPAA: change encryption algorithm in encryptHealthRecord",
+        "status": {"name": "In Progress"},
+        "created": "2026-10-01T09:00:00.000+0000",
+        "labels": ["encryptHealthRecord"],
+        "components": [{"name": "compliance"}]
+      }
+    },
+    {
+      "key": "MT-102",
+      "title_unused": "Billing batch claim processing",
+      "fields": {
+        "summary": "Billing: batch claim processing in processClaim",
+        "status": {"name": "Open"},
+        "created": "2026-10-02T09:00:00.000+0000",
+        "labels": ["processClaim"],
+        "components": [{"name": "billing"}]
+      }
+    },
+    {
+      "key": "MT-103",
+      "fields": {
+        "summary": "Audit: loosen access logging in auditAccess",
+        "status": {"name": "Open"},
+        "created": "2026-10-03T09:00:00.000+0000",
+        "labels": [],
+        "components": [{"name": "compliance"}]
+      }
+    }
+  ]
+}

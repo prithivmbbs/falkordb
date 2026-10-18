@@ -10,6 +10,10 @@ Exposes REST endpoints for the Web Dashboard:
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from typing import Optional, Dict, Any, List
+import json
+import os
+from pathlib import Path
 
 import tools
 import seed
@@ -36,12 +40,46 @@ orchestrator = GovernanceOrchestrator()
 class SimulatePRRequest(BaseModel):
     pr_id: str = Field(default="PR-904", description="Pull Request ID")
     function: str = Field(default="applyDiscount", description="Target function modified by the PR")
-    repo: str = Field(default="acme_checkout", description="Tenant repository (e.g. acme_checkout, acme_auth)")
+    repo: Optional[str] = Field(default=None, description="Tenant repository (defaults to the deployment's REPO_NAME)")
 
 
 class ResetResponse(BaseModel):
     status: str
     message: str
+
+
+def _humanize(tenant_id: str) -> str:
+    return tenant_id.replace("_", " ").replace("-", " ").title()
+
+
+def _tenant_names_from_input() -> dict:
+    """Optional cosmetic display names declared in the company input file."""
+    try:
+        data = json.loads(Path(seed.resolve_input_path()).read_text(encoding="utf-8"))
+        return data.get("tenant_names") or {}
+    except Exception:
+        return {}
+
+
+def _fallback_tenants() -> list[dict]:
+    """company.json / env fallback when the live graph has no tenants yet."""
+    names = _tenant_names_from_input()
+    try:
+        data = json.loads(Path(seed.resolve_input_path()).read_text(encoding="utf-8"))
+        functions_by_repo: dict[str, list[str]] = {}
+        for fn in data.get("functions", []):
+            functions_by_repo.setdefault(fn.get("repo"), []).append(fn.get("name"))
+        tenants = data.get("tenants") or []
+        if tenants:
+            return [{
+                "id": tenant,
+                "name": names.get(tenant, _humanize(tenant)),
+                "functions": sorted(n for n in functions_by_repo.get(tenant, []) if n),
+            } for tenant in tenants]
+    except Exception:
+        pass
+    repo = os.getenv("REPO_NAME", "acme_checkout")
+    return [{"id": repo, "name": _humanize(repo), "functions": []}]
 
 
 @app.get("/")
@@ -54,6 +92,13 @@ def root():
             "/api/graph",
             "/api/tenants",
             "/api/reset",
+            "/api/tools/blast-radius",
+            "/api/tools/expert",
+            "/api/tools/decision-chain",
+            "/api/tools/memories",
+            "/api/tools/blackboard",
+            "/api/tools/cross-tenant",
+            "/api/tools/consolidate",
             "/docs"
         ]
     }
@@ -72,25 +117,35 @@ def health():
 
 @app.get("/api/tenants")
 def get_tenants():
-    return {
-        "tenants": [
-            {
-                "id": "acme_checkout",
-                "name": "Acme Checkout & Billing (Primary Demo)",
-                "functions": ["applyDiscount", "calculateTotal", "checkout", "refundOrder"]
-            },
-            {
-                "id": "acme_auth",
-                "name": "Acme Auth & Identity (Multi-Tenant Isolation)",
-                "functions": ["verifyJwtToken", "rotateSigningKey", "invalidateSessions", "enforceMfaPolicy"]
-            },
-            {
-                "id": "acme_data",
-                "name": "Acme Data Governance & Compliance (GDPR & Cryptography)",
-                "functions": ["hardDeleteAccount", "encryptPiiField", "exportUserData", "auditLogEvent"]
-            }
-        ]
-    }
+    """Tenant discovery (rev1 backend-generalization): derived from the live knowledge
+    graph (distinct Function.repo), falling back to the company input file / env when
+    the graph is empty. Works for any ingested company with no code edits."""
+    tenants: list[dict] = []
+    try:
+        from db import knowledge
+        from db import rows as db_rows
+
+        g = knowledge()
+        repos = db_rows(g.ro_query(
+            "MATCH (f:Function) WHERE f.repo IS NOT NULL "
+            "RETURN DISTINCT f.repo AS repo ORDER BY repo"))
+        names = _tenant_names_from_input()
+        for record in repos:
+            repo = record["repo"]
+            fns = db_rows(g.ro_query(
+                "MATCH (f:Function {repo:$repo}) RETURN f.name AS name ORDER BY f.name",
+                {"repo": repo}))
+            tenants.append({
+                "id": repo,
+                "name": names.get(repo, _humanize(repo)),
+                "functions": [f["name"] for f in fns],
+            })
+    except Exception:
+        tenants = []
+
+    if not tenants:
+        tenants = _fallback_tenants()
+    return {"tenants": tenants}
 
 
 @app.post("/api/simulate")
@@ -111,7 +166,7 @@ def simulate_pr(req: SimulatePRRequest):
 
 
 @app.get("/api/graph")
-def get_graph(function: str = Query(default="applyDiscount"), repo: str = Query(default="acme_checkout")):
+def get_graph(function: str = Query(default="applyDiscount"), repo: Optional[str] = Query(default=None)):
     """Returns nodes and edges formatted for PyVis / NetworkX / interactive graph canvas."""
     try:
         return tools.get_subgraph_for_visualization(function=function, repo=repo)
@@ -146,8 +201,48 @@ def tool_decision_chain(function: str = Query(default="applyDiscount")):
 
 
 @app.get("/api/tools/memories")
-def tool_memories(function: str = Query(default="applyDiscount"), repo: str = Query(default="acme_checkout")):
+def tool_memories(function: str = Query(default="applyDiscount"), repo: Optional[str] = Query(default=None)):
     return tools.get_memory_context(function, repo=repo)
+
+
+@app.get("/api/tools/blackboard")
+def tool_blackboard(session_id: str = Query(..., description="Blackboard session ID to retrieve")):
+    """Track 02: Retrieves all coordination tokens for an active Blackboard session."""
+    return tools.get_blackboard_session(session_id)
+
+
+@app.get("/api/tools/cross-tenant")
+def tool_cross_tenant(
+    function: str = Query(default="verifyJwtToken", description="Function changing in the primary tenant"),
+    primary_tenant: Optional[str] = Query(default=None, description="Primary tenant repository (defaults to the deployment's REPO_NAME)"),
+):
+    """Track 02: Evaluates cross-tenant dependencies across isolated memory graphs."""
+    primary_tenant = primary_tenant or os.getenv("REPO_NAME", "acme_checkout")
+    return tools.query_cross_tenant_memory(function, primary_tenant)
+
+
+class ConsolidateRequest(BaseModel):
+    repo: Optional[str] = Field(default=None, description="Tenant repository memory graph (defaults to the deployment's REPO_NAME)")
+    function: str = Field(..., description="Target function the new learning applies to")
+    incident_id: str = Field(..., description="New incident ID to consolidate")
+    summary: str = Field(..., description="Incident summary")
+    loss_usd: int = Field(default=0, description="Financial loss in USD")
+    playbook_title: str = Field(default="Auto-learned playbook", description="Procedure title")
+    playbook_steps: List[str] = Field(default_factory=list, description="Ordered procedure steps")
+
+
+@app.post("/api/tools/consolidate")
+def tool_consolidate(req: ConsolidateRequest):
+    """Track 02: Dynamically learns a new incident + playbook into the tenant memory graph."""
+    return tools.consolidate_new_learning(
+        repo=req.repo or os.getenv("REPO_NAME", "acme_checkout"),
+        function=req.function,
+        incident_id=req.incident_id,
+        summary=req.summary,
+        loss_usd=req.loss_usd,
+        playbook_title=req.playbook_title,
+        playbook_steps=req.playbook_steps,
+    )
 
 
 if __name__ == "__main__":

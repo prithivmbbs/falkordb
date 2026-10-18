@@ -1,0 +1,20 @@
+{
+  "_meta": "Bridge file for the unseen-sample validation (rev1 backend-generalization).",
+  "slack_to_functions": {"1759000000.000100": ["settleTrade"]},
+  "slack_to_tickets": {"1759000000.000100": "NJT-7"},
+  "slack_mentions": {"1759000000.000100": ["sana"]},
+  "slack_authors": {"1759000100.000200": "mila"},
+  "jira_to_functions": {"NJT-7": ["settleTrade"]},
+  "jira_to_slack": {"NJT-7": ["1759000000.000100"]},
+  "decision_rules": [
+    {
+      "id": "D-N001",
+      "summary": "Cold-wallet signing changes require mandated regulatory sign-off before any release; no exceptions under custody license terms.",
+      "date": "2026-08-02",
+      "justifies": ["signColdWalletTransaction"],
+      "decided_in_slack": [],
+      "decided_in_ticket": ["NJT-8"],
+      "compliance_critical": true
+    }
+  ]
+}

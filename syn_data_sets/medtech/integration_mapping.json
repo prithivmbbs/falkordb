@@ -1,0 +1,28 @@
+{
+  "slack_to_functions": {
+    "1700001000.000001": ["validatePatient"],
+    "1700002000.000002": ["encryptHealthRecord"]
+  },
+  "slack_to_tickets": {
+    "1700001000.000001": "MT-101",
+    "1700002000.000002": "MT-101"
+  },
+  "slack_mentions": {
+    "1700001000.000001": ["helena", "daria"],
+    "1700002000.000002": ["ravi"]
+  },
+  "slack_authors": {
+    "1700001000.000001": "daria",
+    "1700002000.000002": "ravi"
+  },
+  "jira_to_functions": {
+    "MT-101": ["encryptHealthRecord"],
+    "MT-103": ["auditAccess"]
+  },
+  "jira_to_slack": {
+    "MT-101": ["1700002000.000002"]
+  },
+  "decision_rules": [
+    {"id": "DM-001", "summary": "Health record encryption changes require HIPAA Article 32 audit trail and dual-read verification.", "justifies": ["encryptHealthRecord"], "decided_in_slack": ["1700002000.000002"], "decided_in_ticket": ["MT-101"], "compliance_critical": true}
+  ]
+}

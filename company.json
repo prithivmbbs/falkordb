@@ -2,6 +2,12 @@
   "_meta": "EXPANDED enterprise history for NexusGuard multi-tenant demo. Fully satisfies Track 01 (Agents on Connected Data), Track 02 (Agent Memory & Coordination), and Track 03 (Company Brain).",
   "tenants": ["acme_checkout", "acme_auth", "acme_data"],
 
+  "tenant_names": {
+    "acme_checkout": "Acme Checkout & Billing (Primary Demo)",
+    "acme_auth": "Acme Auth & Identity (Multi-Tenant Isolation)",
+    "acme_data": "Acme Data Governance & Compliance"
+  },
+
   "teams": [
     {"id": "team-a", "name": "Team-A (Checkout & Core)", "lead": "asha", "repo": "acme_checkout"},
     {"id": "team-b", "name": "Team-B (Payments & Billing)", "lead": "nina", "repo": "acme_checkout"},
@@ -33,20 +39,20 @@
     {"name": "checkout",            "file": "checkout/flow.py",      "owner_team": "team-a",    "calls": ["calculateTotal"], "repo": "acme_checkout"},
     {"name": "renderCart",          "file": "ui/cart.py",            "owner_team": "team-a",    "calls": [], "repo": "acme_checkout"},
     {"name": "sendReceipt",         "file": "notify/receipt.py",     "owner_team": "team-b",    "calls": ["calculateTotal"], "repo": "acme_checkout"},
-    {"name": "refundOrder",         "file": "payments/refunds.py",   "owner_team": "team-b",    "calls": ["applyDiscount"], "repo": "acme_checkout"},
+    {"name": "refundOrder",         "file": "payments/refunds.py",   "owner_team": "team-b",    "calls": ["applyDiscount", "verifyJwtToken"], "repo": "acme_checkout"},
     {"name": "loyaltyPoints",       "file": "loyalty/points.py",     "owner_team": "team-b",    "calls": ["applyDiscount"], "repo": "acme_checkout"},
     {"name": "chargeStripeInvoice", "file": "billing/stripe.py",     "owner_team": "team-b",    "calls": ["calculateTotal"], "repo": "acme_checkout"},
     {"name": "currencyConversion",   "file": "billing/forex.py",      "owner_team": "team-b",    "calls": [], "repo": "acme_checkout"},
     {"name": "rateLimitRedisBucket", "file": "infra/ratelimit.py",    "owner_team": "team-infra", "calls": [], "repo": "acme_checkout"},
     {"name": "circuitBreaker",       "file": "infra/resilience.py",   "owner_team": "team-infra", "calls": ["chargeStripeInvoice"], "repo": "acme_checkout"},
     
-    {"name": "verifyJwtToken",      "file": "auth/jwt.py",           "owner_team": "team-sec",  "calls": [], "repo": "acme_auth"},
+    {"name": "verifyJwtToken",      "file": "auth/jwt.py",           "owner_team": "team-sec",  "calls": [], "repo": "acme_auth", "compliance_critical": true},
     {"name": "rotateSigningKey",    "file": "auth/keys.py",          "owner_team": "team-sec",  "calls": ["verifyJwtToken"], "repo": "acme_auth"},
     {"name": "invalidateSessions",  "file": "auth/session.py",       "owner_team": "team-sec",  "calls": ["verifyJwtToken"], "repo": "acme_auth"},
     {"name": "enforceMfaPolicy",    "file": "auth/mfa.py",           "owner_team": "team-sec",  "calls": ["verifyJwtToken"], "repo": "acme_auth"},
 
     {"name": "exportUserData",      "file": "privacy/gdpr.py",       "owner_team": "team-data", "calls": ["encryptPiiField"], "repo": "acme_data"},
-    {"name": "hardDeleteAccount",   "file": "privacy/retention.py",  "owner_team": "team-data", "calls": ["auditLogEvent"], "repo": "acme_data"},
+    {"name": "hardDeleteAccount",   "file": "privacy/retention.py",  "owner_team": "team-data", "calls": ["auditLogEvent"], "repo": "acme_data", "compliance_critical": true},
     {"name": "encryptPiiField",     "file": "security/crypto.py",    "owner_team": "team-data", "calls": [], "repo": "acme_data"},
     {"name": "auditLogEvent",       "file": "compliance/audit.py",   "owner_team": "team-data", "calls": [], "repo": "acme_data"}
   ],

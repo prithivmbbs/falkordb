@@ -8,7 +8,13 @@ Explain this formula to the judges: it is simple, transparent, and tunable.
 from collections import defaultdict
 from datetime import date
 
-from db import rows
+try:
+    from db import rows
+except ImportError:
+    try:
+        from files.db import rows
+    except ImportError:
+        from graph.db import rows
 
 W_COMMIT = 1.0
 W_REVIEW = 2.0

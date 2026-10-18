@@ -1,0 +1,30 @@
+{
+  "tenants": ["mini_core"],
+
+  "teams": [
+    {"id": "mc", "name": "Minimal Core", "lead": "alice", "repo": "mini_core"}
+  ],
+
+  "people": [
+    {"id": "alice", "name": "Alice", "active": true, "team": "mc"}
+  ],
+
+  "functions": [
+    {"name": "doWork", "file": "work.py", "owner_team": "mc", "calls": [], "repo": "mini_core"}
+  ],
+
+  "commits": [
+    {"person": "alice", "function": "doWork", "count": 5, "last": "2026-09-01"}
+  ],
+
+  "pull_requests": [
+    {"id": "PR-MINI-1", "title": "Refactor doWork", "author": "alice", "date": "2026-10-10", "state": "open", "repo": "mini_core", "modifies": ["doWork"], "reviewers": []}
+  ],
+
+  "slack": [],
+  "tickets": [],
+  "decisions": [],
+  "docs": [],
+  "incidents": [],
+  "procedures": []
+}

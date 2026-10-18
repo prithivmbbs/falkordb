@@ -1,0 +1,19 @@
+{
+  "workspace": "finledger",
+  "channels": [
+    {"id": "C-FT-1", "name": "ledger-eng", "created": 1700000000, "creator": "U-NORA"}
+  ],
+  "users": [
+    {"id": "U-NORA", "name": "nora", "real_name": "Nora", "deleted": false},
+    {"id": "U-GRETA", "name": "greta", "real_name": "Greta", "deleted": true}
+  ],
+  "messages": [
+    {
+      "type": "message",
+      "channel": "C-FT-1",
+      "user": "U-NORA",
+      "text": "Greta originally wrote postLedgerEntry with the double-write guard; it looks dead but is contractual for audit compliance.",
+      "ts": "1710001000.000001"
+    }
+  ]
+}

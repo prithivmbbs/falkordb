@@ -1,0 +1,79 @@
+{
+  "tenants": ["med_core", "med_compliance", "med_billing"],
+
+  "tenant_names": {
+    "med_core": "MedCore Clinical",
+    "med_compliance": "MedCore Compliance",
+    "med_billing": "MedCore Billing"
+  },
+
+  "teams": [
+    {"id": "mc-eng", "name": "Clinical Engineering", "lead": "daria", "repo": "med_core"},
+    {"id": "mc-comp", "name": "Compliance & Audit", "lead": "ravi", "repo": "med_compliance"},
+    {"id": "mc-bill", "name": "Billing Operations", "lead": "lena", "repo": "med_billing"}
+  ],
+
+  "people": [
+    {"id": "daria", "name": "Daria", "active": true, "team": "mc-eng"},
+    {"id": "tomas", "name": "Tomas", "active": true, "team": "mc-eng"},
+    {"id": "helena", "name": "Helena", "active": false, "team": "mc-eng", "left_on": "2025-07-15"},
+    {"id": "ravi", "name": "Ravi", "active": true, "team": "mc-comp"},
+    {"id": "mei", "name": "Mei", "active": true, "team": "mc-comp"},
+    {"id": "lena", "name": "Lena", "active": true, "team": "mc-bill"},
+    {"id": "omar", "name": "Omar", "active": true, "team": "mc-bill"}
+  ],
+
+  "functions": [
+    {"name": "processClaim", "file": "claims/process.py", "owner_team": "mc-bill", "calls": ["validatePatient", "billInsurance"], "repo": "med_billing"},
+    {"name": "validatePatient", "file": "patients/validate.py", "owner_team": "mc-eng", "calls": [], "repo": "med_core"},
+    {"name": "billInsurance", "file": "billing/insurance.py", "owner_team": "mc-bill", "calls": [], "repo": "med_billing"},
+    {"name": "encryptHealthRecord", "file": "records/encrypt.py", "owner_team": "mc-comp", "calls": [], "repo": "med_compliance", "compliance_critical": true},
+    {"name": "auditAccess", "file": "audit/access.py", "owner_team": "mc-comp", "calls": ["encryptHealthRecord"], "repo": "med_compliance"},
+    {"name": "scheduleAppointment", "file": "appointments/schedule.py", "owner_team": "mc-eng", "calls": [], "repo": "med_core"}
+  ],
+
+  "commits": [
+    {"person": "daria", "function": "validatePatient", "count": 14, "last": "2026-09-10"},
+    {"person": "daria", "function": "scheduleAppointment", "count": 6, "last": "2026-08-22"},
+    {"person": "tomas", "function": "processClaim", "count": 9, "last": "2026-10-01"},
+    {"person": "tomas", "function": "billInsurance", "count": 4, "last": "2026-07-19"},
+    {"person": "helena", "function": "validatePatient", "count": 22, "last": "2025-06-30"},
+    {"person": "helena", "function": "encryptHealthRecord", "count": 11, "last": "2025-05-14"},
+    {"person": "ravi", "function": "encryptHealthRecord", "count": 8, "last": "2026-09-28"},
+    {"person": "ravi", "function": "auditAccess", "count": 5, "last": "2026-08-11"},
+    {"person": "mei", "function": "auditAccess", "count": 3, "last": "2026-06-05"},
+    {"person": "lena", "function": "processClaim", "count": 7, "last": "2026-09-15"},
+    {"person": "lena", "function": "billInsurance", "count": 12, "last": "2026-10-03"},
+    {"person": "omar", "function": "billInsurance", "count": 2, "last": "2026-05-20"}
+  ],
+
+  "pull_requests": [
+    {"id": "PR-M101", "title": "Compliance: change encryption algorithm in encryptHealthRecord", "author": "ravi", "date": "2026-10-15", "state": "open", "repo": "med_compliance", "modifies": ["encryptHealthRecord"], "reviewers": []},
+    {"id": "PR-M102", "title": "Billing: batch claim processing in processClaim", "author": "tomas", "date": "2026-10-14", "state": "open", "repo": "med_billing", "modifies": ["processClaim"], "reviewers": []},
+    {"id": "PR-M103", "title": "UI: restyle appointment calendar in scheduleAppointment", "author": "daria", "date": "2026-10-13", "state": "open", "repo": "med_core", "modifies": ["scheduleAppointment"], "reviewers": []},
+    {"id": "PR-M104", "title": "Audit: loosen access logging in auditAccess", "author": "mei", "date": "2026-10-12", "state": "open", "repo": "med_compliance", "modifies": ["auditAccess"], "reviewers": []}
+  ],
+
+  "slack": [],
+  "tickets": [],
+  "decisions": [],
+
+  "docs": [
+    {"id": "DOCM-1", "title": "Patient Validation & Identity Standard", "last_updated": "2026-02-01", "describes": ["validatePatient"], "repo": "med_core"},
+    {"id": "DOCM-2", "title": "Health Record Encryption & Key Custody", "last_updated": "2026-05-10", "describes": ["encryptHealthRecord"], "repo": "med_compliance"}
+  ],
+
+  "incidents": [
+    {"id": "IM-201", "date": "2026-03-09", "loss_usd": 60000, "summary": "Validation bypass allowed duplicate patient records, causing 1,200 mis-billed claims.", "caused_by_pr": "PR-M090", "affected": ["validatePatient", "processClaim"], "repo": "med_core"},
+    {"id": "IM-202", "date": "2026-06-21", "loss_usd": 30000, "summary": "Encryption key rotation broke decryption on 8,000 legacy health records.", "caused_by_pr": "PR-M091", "affected": ["encryptHealthRecord"], "repo": "med_compliance"}
+  ],
+
+  "procedures": [
+    {"id": "PM-201", "title": "Patient Validation Safety Playbook",
+     "steps": ["Verify identity-proofing rules before altering validation", "Replay 10k patient records against shadow validator", "Gate rollout behind per-tenant feature flag"],
+     "learned_from": "IM-201", "applies_to": ["validatePatient"], "repo": "med_core"},
+    {"id": "PM-202", "title": "Health Record Encryption Rotation Procedure",
+     "steps": ["Dual-read with key-version header for 30 days", "Verify legacy record decryption in staging", "Obtain sign-off from Compliance lead"],
+     "learned_from": "IM-202", "applies_to": ["encryptHealthRecord"], "repo": "med_compliance"}
+  ]
+}
