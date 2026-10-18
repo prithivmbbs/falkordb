@@ -622,3 +622,125 @@ def consolidate_new_learning(repo: str, function: str, incident_id: str, summary
     }
 
 
+def get_full_instance_graph(filter_mode: str = "all") -> dict:
+    """Extracts the entire multi-tenant FalkorDB instance graph topology across all 5 graphs:
+    - dev_knowledge (82 nodes, 202 edges)
+    - dev_memory_acme_checkout (23 nodes, 12 edges)
+    - dev_memory_acme_auth (8 nodes, 4 edges)
+    - dev_memory_acme_data (10 nodes, 8 edges)
+    - dev_agent_state (36 nodes, 27 edges)
+
+    Supports filter_mode: 'all', 'knowledge', 'memory', or 'agent_state'.
+    Returns nodes and edges formatted for PyVis with rich labels, colors, shapes, and group metadata.
+    """
+    try:
+        import db
+    except ImportError:
+        from graph import db
+
+    c = db.client()
+    prefix = db.PREFIX
+
+    # Define palette & shapes by node label
+    STYLE_CONFIG = {
+        "Function": {"color": "#0e7d8c", "shape": "dot", "size": 18},
+        "Person": {"color": "#10b981", "shape": "dot", "size": 20},
+        "Team": {"color": "#0284c7", "shape": "square", "size": 24},
+        "Decision": {"color": "#f59e0b", "shape": "diamond", "size": 22},
+        "PullRequest": {"color": "#ea580c", "shape": "triangle", "size": 18},
+        "Ticket": {"color": "#ec4899", "shape": "dot", "size": 16},
+        "SlackThread": {"color": "#06b6d4", "shape": "dot", "size": 16},
+        "Doc": {"color": "#8b5cf6", "shape": "dot", "size": 16},
+        "Incident": {"color": "#b83a2b", "shape": "triangleDown", "size": 24},
+        "Procedure": {"color": "#059669", "shape": "hexagon", "size": 20},
+        "Session": {"color": "#4338ca", "shape": "star", "size": 24},
+        "CoordinationToken": {"color": "#9333ea", "shape": "dot", "size": 16},
+        "AgentFinding": {"color": "#e11d48", "shape": "dot", "size": 18},
+    }
+
+    graphs_to_query = []
+    if filter_mode in ["all", "knowledge"]:
+        graphs_to_query.append(("knowledge", f"{prefix}_knowledge", "Knowledge Graph"))
+    if filter_mode in ["all", "memory"]:
+        for t in ["acme_checkout", "acme_auth", "acme_data"]:
+            graphs_to_query.append((f"memory_{t}", f"{prefix}_memory_{t}", f"Memory ({t})"))
+    if filter_mode in ["all", "agent_state"]:
+        graphs_to_query.append(("agent_state", f"{prefix}_agent_state", "Agent State"))
+
+    nodes = {}
+    edges = []
+
+    def _format_node(n, domain, domain_label):
+        if not n:
+            return None
+        nid = f"{domain}_{n.id}"
+        if nid in nodes:
+            return nid
+
+        labels = getattr(n, "labels", ["Entity"])
+        plabel = labels[0] if labels else "Entity"
+        props = getattr(n, "properties", {})
+        title_str = props.get("name") or props.get("id") or props.get("title") or props.get("summary") or nid
+        if len(str(title_str)) > 30:
+            short_title = str(title_str)[:27] + "..."
+        else:
+            short_title = str(title_str)
+
+        style = STYLE_CONFIG.get(plabel, {"color": "#64748b", "shape": "dot", "size": 16})
+        color = style["color"]
+        if plabel == "Person" and not props.get("active", True):
+            color = "#94a3b8"  # gray for departed
+
+        tooltip_lines = [f"<b>[{domain_label}] {plabel}</b>: {title_str}"]
+        for k, v in props.items():
+            if k not in ["name", "id", "title"]:
+                val_str = str(v)
+                if len(val_str) > 80:
+                    val_str = val_str[:77] + "..."
+                tooltip_lines.append(f"{k}: {val_str}")
+        tooltip = "<br/>".join(tooltip_lines)
+
+        nodes[nid] = {
+            "id": nid,
+            "label": f"{plabel}\n{short_title}",
+            "group": plabel,
+            "domain": domain,
+            "domain_label": domain_label,
+            "title": tooltip,
+            "color": color,
+            "shape": style["shape"],
+            "size": style["size"],
+            "properties": props
+        }
+        return nid
+
+    for domain, g_name, domain_label in graphs_to_query:
+        try:
+            g = c.select_graph(g_name)
+            res = g.query("MATCH (n) OPTIONAL MATCH (n)-[r]->(m) RETURN n, r, m")
+            for row in res.result_set:
+                n, r, m = row[0], row[1], row[2]
+                nid = _format_node(n, domain, domain_label)
+                mid = _format_node(m, domain, domain_label) if m else None
+                if r and nid and mid:
+                    rel_name = getattr(r, "relation", "CONNECTED_TO")
+                    edges.append({
+                        "from": nid,
+                        "to": mid,
+                        "label": rel_name,
+                        "title": f"[{domain_label}] {rel_name}",
+                        "domain": domain
+                    })
+        except Exception:
+            pass
+
+    return {
+        "nodes": list(nodes.values()),
+        "edges": edges,
+        "total_nodes": len(nodes),
+        "total_edges": len(edges),
+        "filter_mode": filter_mode
+    }
+
+
+
