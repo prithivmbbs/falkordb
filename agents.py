@@ -10,7 +10,7 @@ Track 02 Deep Optimization: Agent Memory & Multi-Agent Coordination Engine.
 import os
 import json
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from dotenv import load_dotenv
 
 import tools

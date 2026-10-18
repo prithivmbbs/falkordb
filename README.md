@@ -78,6 +78,56 @@ flowchart TD
 
 ---
 
+## 🗄️ Graph Data Model & Multi-Tenant Schema
+
+NexusGuard uses three distinct graph layers hosted within FalkorDB:
+
+### 1. Company Brain Knowledge Graph (`dev_knowledge`)
+* **Nodes:**
+  * `Person` (`id`, `name`, `active`, `left_on`)
+  * `Team` (`id`, `name`, `repo`)
+  * `Function` (`name`, `file`, `repo`)
+  * `PullRequest` (`id`, `title`, `date`, `state`, `risk_level`, `repo`)
+  * `SlackThread` (`id`, `channel`, `date`, `text`)
+  * `Ticket` (`id`, `title`, `status`, `date`)
+  * `Decision` (`id`, `summary`, `date`)
+  * `Doc` (`id`, `title`, `last_updated`, `is_stale`, `repo`)
+* **Relationships:**
+  * `(:Person)-[:MEMBER_OF | :LEADS]->(:Team)`
+  * `(:Team)-[:OFFICIALLY_OWNS]->(:Function)`
+  * `(:Function)-[:CALLS]->(:Function)`
+  * `(:Person)-[:COMMITTED {count, last}]->(:Function)`
+  * `(:Person)-[:AUTHORED | :REVIEWED]->(:PullRequest)`
+  * `(:PullRequest)-[:MODIFIES]->(:Function)`
+  * `(:Person)-[:POSTED | :MENTIONED_IN]->(:SlackThread)`
+  * `(:SlackThread)-[:ABOUT]->(:Function)`
+  * `(:SlackThread)-[:LED_TO]->(:Ticket)`
+  * `(:Ticket)-[:REFERENCES]->(:Function)`
+  * `(:Decision)-[:JUSTIFIES]->(:Function)`
+  * `(:Decision)-[:DECIDED_IN]->(:SlackThread | :Ticket)`
+  * `(:Doc)-[:DESCRIBES]->(:Function)`
+  * `(:Person)-[:KNOWS_ABOUT {score, commits, reviews, mentions, last_activity}]->(:Function)`
+
+### 2. Multi-Tenant Memory Graphs (`dev_memory_<repo>`)
+Isolated per tenant (`acme_checkout`, `acme_auth`, `acme_data`) for strict regulatory and privacy boundaries:
+* **Nodes:** `Incident` (`id`, `date`, `loss_usd`, `summary`), `Procedure` (`id`, `title`, `steps`), plus stub `Function` and `PullRequest`.
+* **Relationships:**
+  * `(:Incident)-[:CAUSED_BY]->(:PullRequest)`
+  * `(:Incident)-[:AFFECTED]->(:Function)`
+  * `(:Procedure)-[:LEARNED_FROM]->(:Incident)`
+  * `(:Procedure)-[:APPLIES_TO]->(:Function)`
+
+### 3. Agent Coordination Blackboard Graph (`dev_agent_state`)
+Enables working-memory state handoffs between agents without hidden in-memory state:
+* **Nodes:** `Session` (`id`, `created_at`), `CoordinationToken` (`id`, `token_id`, `from_agent`, `to_agent`, `phase`, `message`, `timestamp`, `payload`)
+* **Relationships:** `(:Session)-[:COORDINATED]->(:CoordinationToken)`
+
+### Recency-Decayed Expertise Centrality
+$$\text{raw} = (\text{commits} \times 1.0) + (\text{reviews} \times 2.0) + (\text{mentions} \times 0.5)$$
+$$\text{score} = \text{round}\left(\text{raw} \times 0.5^{\frac{\text{days\_since\_last\_activity}}{365}}, 2\right)$$
+
+---
+
 ## ⚡ 8 Benchmark Scenarios
 
 | # | Scenario | Tenant | Function | Risk Level | Autonomous Outcome |
@@ -152,7 +202,6 @@ python mcp_server.py
 9. `query_cross_tenant_memory(...)`: Evaluates cross-tenant boundaries without leaking code.
 10. `consolidate_new_learning(...)`: Dynamically mints new incidents and playbooks into FalkorDB.
 
-
 ---
 
 ## 📁 Repository Structure
@@ -166,12 +215,9 @@ falkordb/
 ├── agents.py             # Scout, Consolidator, and Fixer agents with FalkorDB Blackboard coordination
 ├── api.py                # FastAPI REST endpoints
 ├── mcp_server.py         # FastMCP stdio server (10 tools exposed)
-├── app.py                # Streamlit dashboard (Perplexity Scholar's Parchment design, minimal nodes)
-├── DESIGN.md             # UI/UX design specifications & token reference
+├── app.py                # Streamlit dashboard (Scholar's Parchment design, minimal nodes)
 ├── test_tools.py         # Automated test suite for all 10 tools
-├── schema.md             # Graph database schema contract & conventions
 ├── walkthrough.md        # Comprehensive walkthrough & pitch script
-├── nexusguard_project_blueprint_workflow.md # Complete architecture blueprint
 └── requirements.txt      # Python dependencies
 ```
 

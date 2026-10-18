@@ -4,8 +4,6 @@ Exposes autonomous graph-backed engineering governance tools over Model Context 
 Run standalone (stdio transport):
     python mcp_server.py
 """
-import sys
-
 try:
     from mcp.server.fastmcp import FastMCP
 except ImportError:
@@ -14,13 +12,7 @@ except ImportError:
     except ImportError:
         FastMCP = None
 
-try:
-    import tools
-except ImportError:
-    try:
-        from files import tools
-    except ImportError:
-        from mcp_server import tools
+import tools
 
 if FastMCP is None:
     raise ImportError(

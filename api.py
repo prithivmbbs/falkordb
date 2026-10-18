@@ -10,7 +10,6 @@ Exposes REST endpoints for the Web Dashboard:
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any, List
 
 import tools
 import seed

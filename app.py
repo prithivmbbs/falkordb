@@ -1,5 +1,5 @@
 """NexusGuard — Autonomous Graph-Backed Engineering Governance
-Design: Scholar's Parchment Design System (UI_SPEC.md)
+Design: Scholar's Parchment Design System
 Colors: Parchment (#faf8f5), Soft Paper (#fdfbfa), Ink (#27251e), Graphite (#72706b),
         Warm Mist (#d1d1cd), Deep Teal (#016a71), Risk Red (#b83a2b), Risk Amber (#8a6100)
 """
@@ -8,15 +8,11 @@ import streamlit.components.v1 as components
 import json
 import os
 import tempfile
-import time
 import textwrap
 from pyvis.network import Network
 
-import importlib
 import tools
-importlib.reload(tools)
 import agents
-importlib.reload(agents)
 from agents import GovernanceOrchestrator
 import seed
 

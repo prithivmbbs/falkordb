@@ -7,13 +7,7 @@ Provides fixed, parameterized, safe Cypher queries covering:
 5. Scout-Agent risk finding logging (Track 02)
 6. Autonomous PR governance action & doc staleness tagging (Track 01 & 02)
 """
-try:
-    from db import knowledge, memory, agent_state, rows
-except ImportError:
-    try:
-        from files.db import knowledge, memory, agent_state, rows
-    except ImportError:
-        from graph.db import knowledge, memory, agent_state, rows
+from db import knowledge, memory, agent_state, rows
 
 MAX_HOPS = 5
 

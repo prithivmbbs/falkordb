@@ -8,26 +8,10 @@ import json
 import os
 from pathlib import Path
 
-try:
-    from db import client, knowledge, memory, agent_state, PREFIX, REPO
-    from scoring import compute_knows_about
-except ImportError:
-    try:
-        from files.db import client, knowledge, memory, agent_state, PREFIX, REPO
-        from files.scoring import compute_knows_about
-    except ImportError:
-        from graph.db import client, knowledge, memory, agent_state, PREFIX, REPO
-        from graph.scoring import compute_knows_about
+from db import client, knowledge, memory, agent_state, PREFIX, REPO
+from scoring import compute_knows_about
 
-# Resilient data path lookup
-DATA_CANDIDATES = [
-    Path(__file__).resolve().parent / "company.json",
-    Path(__file__).resolve().parent / "files" / "company.json",
-    Path(__file__).resolve().parent / "data" / "company.json",
-    Path(__file__).resolve().parent.parent / "files" / "company.json",
-    Path(__file__).resolve().parent.parent / "data" / "company.json",
-]
-DATA = next((p for p in DATA_CANDIDATES if p.exists()), Path("company.json"))
+DATA = Path(__file__).resolve().parent / "company.json"
 
 
 def reset(g):
@@ -62,7 +46,7 @@ def make_indexes(g, pairs):
     for label, prop in pairs:
         try:
             g.query(f"CREATE INDEX FOR (n:{label}) ON (n.{prop})")
-        except Exception as e:
+        except Exception:
             pass
 
 
@@ -166,7 +150,7 @@ def seed_agent_state():
 
 def seed_all():
     if not DATA.exists():
-        raise FileNotFoundError(f"Cannot find company.json. Checked: {[str(p) for p in DATA_CANDIDATES]}")
+        raise FileNotFoundError(f"Cannot find company.json at {DATA}")
     data = json.loads(DATA.read_text(encoding="utf-8"))
     
     # 1. Seed Knowledge Graph

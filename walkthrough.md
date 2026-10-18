@@ -64,7 +64,7 @@ When a developer opens a Pull Request, three autonomous AI agents work together 
 
 ---
 
-## Live Demo: 5 Real Scenarios
+## Live Demo: 8 Real Scenarios
 
 ### Scenario 1: "The Innocent Cleanup That Breaks Billing"
 
@@ -149,8 +149,6 @@ When a developer opens a Pull Request, three autonomous AI agents work together 
 *This scenario proves multi-tenant isolation: the auth team's memory is completely separate from checkout.*
 
 ---
-
-### Scenario 5: "The Batch Refund Optimization"
 
 ### Scenario 5: "The Batch Refund Optimization"
 
@@ -265,9 +263,9 @@ NexusGuard doesn't just generate a report. It:
 
 ### Act 2: The Critical Block (60 seconds)
 1. Select **Scenario 1: [CRITICAL // BLOCKED] PR-904 -> applyDiscount** in the sidebar.
-2. Click **"EXECUTE NEURAL GRAPH SIMULATION"**.
-3. Point to the **Status Banner:** 🛑 **HIGH RISK // BLOCKED**.
-4. Open the **Synaptic Thinking Trace Tab:**
+2. Click **"Run Governance Simulation"**.
+3. Point to the **Status Banner:** 🛑 **CRITICAL RISK // MERGE BLOCKED**.
+4. Open the **Agents** navigation view:
    - Show **Scout-Agent**: traversed 7 callers across 3 teams.
    - Show **Decision Provenance**: caught CEO Sarah's promise on Slack `#sales` from 2025 for Client X.
    - Show **Episodic Memory**: identified Incident I-007 ($12,000 outage from doing this exact refactor).
@@ -275,14 +273,14 @@ NexusGuard doesn't just generate a report. It:
 
 ### Act 3: Multi-Tenant & Compliance (45 seconds)
 1. Select **Scenario 6: [CRITICAL // BLOCKED] PR-330 -> hardDeleteAccount (acme_data)**.
-2. Click **"EXECUTE NEURAL GRAPH SIMULATION"**.
+2. Click **"Run Governance Simulation"**.
 3. Explain: *"NexusGuard isn't a monolith. Notice how it seamlessly switched to our `acme_data` tenant memory graph. It caught a GDPR Article 17 non-compliance violation (D-005) that previously cost $45,000 in incident I-033, and assigned Data Protection Officer Marcus."*
 
 ### Act 4: Non-Crying Wolf & Copilot Chat (45 seconds)
 1. Switch to **Scenario 3: [LOW // AUTO-APPROVED] PR-108 -> renderCart**.
 2. Click simulate: point out ✅ **SAFE // AUTO-APPROVED**.
    - Explain: *"NexusGuard doesn't slow developers down. If there are no downstream callers, no contractual decisions, and no past outages, it auto-approves instantly."*
-3. Click the **Nexus Copilot Console Tab**:
+3. Click the **Copilot** navigation view:
    - Type: *"Why was PR-904 blocked?"* or *"Who knows about applyDiscount?"*
    - Show the instant graph-grounded response.
 4. Conclude: *"In under 2 seconds, FalkorDB turns scattered Slack messages and git history into autonomous engineering safety."*
