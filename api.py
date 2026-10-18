@@ -82,7 +82,12 @@ def get_tenants():
             {
                 "id": "acme_auth",
                 "name": "Acme Auth & Identity (Multi-Tenant Isolation)",
-                "functions": ["verifyJwtToken", "rotateSigningKey"]
+                "functions": ["verifyJwtToken", "rotateSigningKey", "invalidateSessions", "enforceMfaPolicy"]
+            },
+            {
+                "id": "acme_data",
+                "name": "Acme Data Governance & Compliance (GDPR & Cryptography)",
+                "functions": ["hardDeleteAccount", "encryptPiiField", "exportUserData", "auditLogEvent"]
             }
         ]
     }
