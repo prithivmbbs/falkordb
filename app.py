@@ -31,7 +31,7 @@ st.set_page_config(
 # ──────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0,0');
     @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..24,400,0,0');
 
@@ -43,9 +43,12 @@ st.markdown("""
         --color-ash: #92918b;
         --color-graphite: #6e6c66;
         --color-ink: #1e1c16;
+        --color-forest: #16332a;
+        --color-forest-dark: #102a24;
         --color-deep-teal: #016a71;
         --color-risk-red: #b83a2b;
         --color-risk-amber: #8a6100;
+        --font-serif: 'Newsreader', Georgia, serif;
         --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         --font-display: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
@@ -154,7 +157,10 @@ st.markdown("""
         font-size: 1.15rem !important;
     }
 
-    /* ── Page Canvas ── */
+    /* ── Page Canvas & Smooth Viewport Dynamics ── */
+    html, body, [data-testid="stAppViewContainer"], section.main, .main, div[data-testid="stMainBlockContainer"] {
+        scroll-behavior: smooth !important;
+    }
     html, body {
         background-color: var(--color-parchment) !important;
         color: var(--color-ink) !important;
@@ -170,17 +176,31 @@ st.markdown("""
         -webkit-font-smoothing: antialiased;
     }
 
+    /* Silky smooth tab switch glide entrance */
+    @keyframes nexusTabGlideEnter {
+        0% {
+            opacity: 0;
+            transform: translateY(14px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    div[data-testid="stMainBlockContainer"] > div[data-testid="stVerticalBlock"]:nth-of-type(n+2) {
+        animation: nexusTabGlideEnter 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
     /* ── Main Container — fluid, evenly spread, responsive layout ── */
     div[data-testid="stMainBlockContainer"],
-    .stMainBlockContainer,
-    .block-container,
-    .main .block-container {
+    section.main > .block-container,
+    div[data-testid="stAppViewContainer"] > section.main .block-container {
         width: 100% !important;
-        max-width: 1400px !important;
+        max-width: 1240px !important;
         padding-top: 0.75rem !important;
         padding-bottom: 3rem !important;
-        padding-left: clamp(1.5rem, 3.5vw, 3.5rem) !important;
-        padding-right: clamp(1.5rem, 3.5vw, 3.5rem) !important;
+        padding-left: clamp(1rem, 2vw, 2rem) !important;
+        padding-right: clamp(1rem, 2vw, 2rem) !important;
         margin-left: auto !important;
         margin-right: auto !important;
         box-sizing: border-box !important;
@@ -427,8 +447,50 @@ st.markdown("""
     }
     section[data-testid="stSidebar"] .block-container {
         padding-top: 1.5rem !important;
-        padding-left: 1.5rem !important;
-        padding-right: 1.5rem !important;
+        padding-left: 1.15rem !important;
+        padding-right: 1.15rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+    }
+
+    /* Sidebar scenario drop-down: full content visible, multiline wrapping */
+    section[data-testid="stSidebar"] div[data-baseweb="select"] {
+        min-height: 44px !important;
+        height: auto !important;
+    }
+    section[data-testid="stSidebar"] div[data-baseweb="select"] > div {
+        height: auto !important;
+        min-height: 44px !important;
+        padding-top: 4px !important;
+        padding-bottom: 4px !important;
+    }
+    section[data-testid="stSidebar"] div[data-baseweb="select"] div,
+    section[data-testid="stSidebar"] div[data-baseweb="select"] span {
+        white-space: normal !important;
+        word-break: break-word !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
+        -webkit-line-clamp: unset !important;
+        line-height: 1.35 !important;
+        font-size: 0.8125rem !important;
+    }
+    /* Selectbox dropdown popup options: wide floating popover with full multiline visibility */
+    div[data-baseweb="popover"],
+    div[data-baseweb="menu"],
+    ul[data-baseweb="menu"] {
+        min-width: 380px !important;
+        max-width: 480px !important;
+    }
+    ul[role="listbox"] li,
+    ul[role="listbox"] li div,
+    ul[role="listbox"] li span,
+    ul[data-baseweb="menu"] li {
+        white-space: normal !important;
+        word-break: break-word !important;
+        line-height: 1.4 !important;
+        font-size: 0.8125rem !important;
+        padding: 8px 12px !important;
     }
 
     /* Sidebar Primary Button: Minimalist Teal with Glass Highlight */
@@ -763,6 +825,657 @@ st.markdown("""
         border-radius: 12px !important;
         display: block !important;
     }
+
+    /* ── KindRed-Inspired Opening & Hero Section ── */
+    /* User's Celestial Ice-Cyan Gradient System (#88acd8 -> #9ccfe9 -> #bdfbff) */
+    .kindred-gradient-title {
+        background: linear-gradient(135deg, #3d6f9e 0%, #20768e 50%, #0e7d8c 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: inline-block;
+        font-weight: 500;
+    }
+    .kindred-gradient-eyebrow {
+        background: linear-gradient(90deg, #4f79a7 0%, #29829f 50%, #157989 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: inline-block;
+    }
+    .kindred-gradient-light {
+        background: linear-gradient(90deg, #88acd8 0%, #9ccfe9 50%, #bdfbff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: inline-block;
+        font-weight: 500;
+    }
+    .kindred-hero {
+        text-align: center;
+        max-width: 1060px;
+        margin: 1.5rem auto 2.2rem auto;
+    }
+    .kindred-eyebrow {
+        font-family: var(--font-display);
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--color-deep-teal);
+        margin-bottom: 0.75rem;
+    }
+    .kindred-title {
+        font-family: var(--font-serif);
+        font-size: clamp(2.4rem, 4.8vw, 4.2rem);
+        font-weight: 400;
+        line-height: 1.08;
+        color: var(--color-forest);
+        letter-spacing: -0.018em;
+        max-width: 940px;
+        margin: 0 auto 1.35rem auto;
+    }
+    .kindred-sub {
+        font-family: var(--font-sans);
+        font-size: clamp(1.02rem, 1.6vw, 1.15rem);
+        line-height: 1.68;
+        color: #4a5952;
+        max-width: 720px;
+        margin: 0 auto 1.75rem auto;
+    }
+    .hero-cta {
+        display: flex;
+        gap: 14px;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #183b32 0%, #174b58 50%, #135b69 100%) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(189, 251, 255, 0.28) !important;
+        border-radius: 9999px !important;
+        padding: 10px 26px !important;
+        font-family: var(--font-display) !important;
+        font-size: 0.9375rem !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        box-shadow: 0 4px 18px rgba(79, 121, 167, 0.22) !important;
+        transition: all 0.2s ease !important;
+        height: 42px !important;
+        box-sizing: border-box !important;
+    }
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #102a24 0%, #103d47 50%, #0d4a55 100%) !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 6px 24px rgba(156, 207, 233, 0.4) !important;
+        border-color: rgba(189, 251, 255, 0.6) !important;
+        color: #ffffff !important;
+    }
+    div[class*="st-key-hero_cta_graph"] button {
+        background-color: rgba(255, 255, 255, 0.5) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        color: #183b32 !important;
+        border: 1px solid rgba(24, 59, 50, 0.3) !important;
+        border-radius: 9999px !important;
+        padding: 10px 26px !important;
+        font-family: var(--font-display) !important;
+        font-size: 0.9375rem !important;
+        font-weight: 600 !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+        transition: all 0.2s ease !important;
+        height: 42px !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+    }
+    div[class*="st-key-hero_cta_graph"] button:hover {
+        background-color: rgba(255, 255, 255, 0.85) !important;
+        border-color: #183b32 !important;
+        transform: translateY(-1px) !important;
+    }
+    div[class*="st-key-hero_cta_graph"] button * {
+        color: #183b32 !important;
+        font-weight: 600 !important;
+    }
+    /* ── High-Tech Telemetry Domain Matrix Strip ── */
+    .nexus-telemetry-strip {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+        gap: 14px;
+        max-width: 980px;
+        margin: 1.5rem auto 1.5rem auto;
+    }
+    .telemetry-chip {
+        background: var(--glass-bg) !important;
+        backdrop-filter: var(--glass-blur) saturate(120%) !important;
+        -webkit-backdrop-filter: var(--glass-blur) saturate(120%) !important;
+        border: 1px solid var(--glass-border) !important;
+        border-radius: 10px;
+        padding: 12px 16px;
+        box-shadow: var(--glass-shadow);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .telemetry-chip::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 2.5px;
+        background: rgba(142, 194, 222, 0.35);
+        transition: all 0.25s ease;
+    }
+    .telemetry-chip:hover {
+        transform: translateY(-2px);
+        background: var(--glass-bg-hover) !important;
+        box-shadow: 0 6px 20px rgba(39, 37, 30, 0.08);
+        border-color: rgba(156, 207, 233, 0.7) !important;
+    }
+    .telemetry-chip.active-chip {
+        background: rgba(255, 255, 255, 0.55) !important;
+        border: 1px solid rgba(142, 194, 222, 0.8) !important;
+        box-shadow: 0 8px 24px rgba(61, 111, 158, 0.12), 0 0 16px rgba(189, 251, 255, 0.35) !important;
+        transform: translateY(-2px);
+    }
+    .telemetry-chip.active-chip::before {
+        background: linear-gradient(90deg, #88acd8 0%, #9ccfe9 50%, #bdfbff 100%) !important;
+        height: 3px;
+    }
+    .telemetry-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+    }
+    .telemetry-tag {
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: #3d6f9e;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .telemetry-status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #92918b;
+        transition: all 0.2s ease;
+    }
+    .telemetry-status-dot.status-live {
+        background: #0e7d8c;
+        box-shadow: 0 0 8px rgba(14, 125, 140, 0.8);
+        animation: pulseLiveDot 2s infinite ease-in-out;
+    }
+    @keyframes pulseLiveDot {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.35); opacity: 0.75; }
+    }
+    .telemetry-target {
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #1e1c16;
+        margin-bottom: 8px;
+    }
+    .telemetry-foot {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.72rem;
+    }
+    .telemetry-risk-badge {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 0.68rem;
+        padding: 2px 7px;
+        border-radius: 4px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+    .badge-danger {
+        background: rgba(184, 58, 43, 0.09);
+        color: #b83a2b;
+        border: 1px solid rgba(184, 58, 43, 0.22);
+    }
+    .badge-warning {
+        background: rgba(138, 97, 0, 0.09);
+        color: #8a6100;
+        border: 1px solid rgba(138, 97, 0, 0.22);
+    }
+    .badge-info {
+        background: rgba(1, 106, 113, 0.09);
+        color: #016a71;
+        border: 1px solid rgba(1, 106, 113, 0.22);
+    }
+    .telemetry-stat {
+        font-family: 'JetBrains Mono', monospace;
+        color: #6e6c66;
+        font-size: 0.72rem;
+        font-weight: 600;
+    }
+
+    /* ── Executive Intelligence Dispatch Card (crisp sans typography) ── */
+    .nexus-dispatch-card {
+        background: var(--glass-bg) !important;
+        backdrop-filter: var(--glass-blur) saturate(120%) !important;
+        -webkit-backdrop-filter: var(--glass-blur) saturate(120%) !important;
+        border: 1px solid var(--glass-border) !important;
+        border-left: 3.5px solid #20768e !important;
+        border-radius: 12px;
+        padding: 16px 22px;
+        box-shadow: var(--glass-shadow);
+        max-width: 980px;
+        margin: 0 auto 1.75rem auto;
+    }
+    .dispatch-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .dispatch-meta-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .dispatch-live-beacon {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #0e7d8c;
+        box-shadow: 0 0 10px rgba(14, 125, 140, 0.9);
+        animation: pulseLiveDot 1.8s infinite;
+    }
+    .dispatch-eyebrow {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.09em;
+        color: #20768e;
+        text-transform: uppercase;
+    }
+    .dispatch-meta-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .dispatch-chip-pr {
+        font-family: var(--font-display);
+        font-size: 0.75rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #3d6f9e 0%, #20768e 50%, #0e7d8c 100%);
+        color: #ffffff;
+        padding: 2px 9px;
+        border-radius: 4px;
+        letter-spacing: 0.04em;
+    }
+    .dispatch-chip-repo {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.75rem;
+        color: #4a5952;
+        background: rgba(0, 0, 0, 0.04);
+        padding: 2px 8px;
+        border-radius: 4px;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+    .dispatch-content {
+        font-family: var(--font-display);
+        font-size: 1.05rem;
+        font-weight: 500;
+        font-style: normal !important;
+        color: #1e1c16;
+        line-height: 1.6;
+        margin-bottom: 14px;
+    }
+    .dispatch-prefix {
+        color: #6e6c66;
+        font-weight: 500;
+    }
+    .dispatch-fn-badge {
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: 700;
+        color: #0e7d8c;
+        background: rgba(14, 125, 140, 0.08);
+        padding: 2px 7px;
+        border-radius: 5px;
+        border: 1px solid rgba(14, 125, 140, 0.2);
+    }
+    .dispatch-arrow {
+        color: #20768e;
+        font-weight: 700;
+        margin: 0 4px;
+    }
+    .dispatch-rationale-text {
+        color: #16332a;
+        font-weight: 600;
+    }
+    .dispatch-pipeline-track {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 10px;
+        border-top: 1px solid rgba(0, 0, 0, 0.06);
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+    .track-stage {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--font-display);
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #92918b;
+        transition: all 0.2s ease;
+    }
+    .track-stage.active {
+        color: #16332a;
+        font-weight: 700;
+    }
+    .stage-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #92918b;
+    }
+    .track-stage.active .stage-dot {
+        background: linear-gradient(90deg, #88acd8 0%, #9ccfe9 50%, #bdfbff 100%);
+        box-shadow: 0 0 6px rgba(156, 207, 233, 0.9);
+    }
+    .track-line {
+        flex: 1;
+        min-width: 20px;
+        height: 2px;
+        background: rgba(0, 0, 0, 0.08);
+        border-radius: 2px;
+    }
+    .track-line.active {
+        background: linear-gradient(90deg, #88acd8 0%, #9ccfe9 50%, #bdfbff 100%);
+    }
+
+    /* ── SVG Animated Architecture Pathway ── */
+    .kindred-scene-card {
+        background: var(--glass-bg) !important;
+        backdrop-filter: var(--glass-blur) saturate(120%) !important;
+        -webkit-backdrop-filter: var(--glass-blur) saturate(120%) !important;
+        border: 1px solid var(--glass-border) !important;
+        border-radius: 16px !important;
+        padding: 24px 20px 20px 20px;
+        box-shadow: var(--glass-shadow) !important;
+        margin-bottom: 3rem;
+    }
+    @keyframes pulseFlow {
+        0% { stroke-dashoffset: 400; }
+        100% { stroke-dashoffset: 0; }
+    }
+    @keyframes tokenFloat {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-4px); }
+    }
+    .flow-ribbon {
+        stroke-dasharray: 8 6;
+        animation: pulseFlow 14s linear infinite;
+    }
+    .node-token {
+        animation: tokenFloat 3.5s ease-in-out infinite;
+    }
+
+    /* ── Dark Impact Callout Section ── */
+    .kindred-dark-callout {
+        background: linear-gradient(145deg, #0e2029 0%, #132a35 50%, #0c1d25 100%) !important;
+        border: 1px solid rgba(156, 207, 233, 0.22) !important;
+        border-radius: 16px;
+        padding: 3.25rem 2.25rem;
+        margin-top: 2.75rem;
+        margin-bottom: 3.25rem;
+        text-align: center;
+        box-shadow: 0 12px 42px rgba(12, 29, 37, 0.35), 0 0 24px rgba(156, 207, 233, 0.08) !important;
+    }
+    .dark-callout-title {
+        font-family: var(--font-serif) !important;
+        font-size: clamp(1.9rem, 3.6vw, 2.85rem) !important;
+        font-weight: 400 !important;
+        line-height: 1.18 !important;
+        color: #ffffff !important;
+        margin-bottom: 1.15rem !important;
+        letter-spacing: -0.015em !important;
+    }
+    .dark-callout-body {
+        font-family: var(--font-sans) !important;
+        font-size: 1.05rem !important;
+        line-height: 1.75 !important;
+        color: #dce9de !important;
+        max-width: 820px !important;
+        margin: 0 auto !important;
+    }
+
+    /* ── Impact Metrics Grid ── */
+    .kindred-impact-section {
+        margin-bottom: 3.5rem;
+    }
+    .impact-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.25rem;
+        margin-top: 1.5rem;
+    }
+    .impact-stat-card {
+        background: var(--glass-bg) !important;
+        backdrop-filter: var(--glass-blur) saturate(120%) !important;
+        -webkit-backdrop-filter: var(--glass-blur) saturate(120%) !important;
+        border: 1px solid var(--glass-border) !important;
+        border-radius: 14px !important;
+        padding: 1.5rem 1.25rem;
+        box-shadow: var(--glass-shadow) !important;
+        text-align: left;
+        transition: all 0.22s ease;
+    }
+    .impact-stat-card:hover {
+        background: var(--glass-bg-hover) !important;
+        transform: translateY(-2px);
+    }
+    .impact-number {
+        font-family: var(--font-serif);
+        font-size: 2.75rem;
+        font-weight: 500;
+        line-height: 1;
+        background: linear-gradient(135deg, #3d6f9e 0%, #20768e 50%, #0e7d8c 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.5rem;
+    }
+    .impact-label {
+        font-family: var(--font-display);
+        font-size: 0.9375rem;
+        font-weight: 700;
+        color: #1e1c16;
+        margin-bottom: 0.35rem;
+    }
+    .impact-desc {
+        font-size: 0.8125rem;
+        line-height: 1.5;
+        color: #6e6c66;
+    }
+
+    /* ── Graph Mindmap Topology Canvas ── */
+    .nexus-mindmap-canvas {
+        background: var(--glass-bg) !important;
+        backdrop-filter: var(--glass-blur) saturate(120%) !important;
+        -webkit-backdrop-filter: var(--glass-blur) saturate(120%) !important;
+        border: 1px solid var(--glass-border) !important;
+        border-radius: 18px;
+        padding: 2.25rem 1.75rem;
+        box-shadow: var(--glass-shadow);
+        margin-top: 1.5rem;
+        margin-bottom: 3rem;
+        position: relative;
+    }
+    .mindmap-root-hub {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 0.5rem;
+        position: relative;
+        z-index: 2;
+    }
+    .hub-inner-node {
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+        background: rgba(255, 255, 255, 0.75);
+        border: 1.5px solid rgba(142, 194, 222, 0.7);
+        border-radius: 9999px;
+        padding: 10px 24px;
+        box-shadow: 0 4px 20px rgba(61, 111, 158, 0.12), 0 0 20px rgba(189, 251, 255, 0.4);
+    }
+    .hub-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(136, 172, 216, 0.2) 0%, rgba(189, 251, 255, 0.3) 100%);
+        border: 1px solid rgba(156, 207, 233, 0.6);
+    }
+    .hub-info {
+        text-align: left;
+    }
+    .hub-badge {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: #20768e;
+        display: block;
+        text-transform: uppercase;
+    }
+    .hub-title {
+        font-family: var(--font-display);
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #16332a;
+        line-height: 1.2;
+    }
+    .hub-meta {
+        font-size: 0.75rem;
+        color: #6e6c66;
+    }
+    .mindmap-synapse-wrap {
+        width: 100%;
+        max-width: 900px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 1;
+        height: 65px;
+    }
+    .synapse-flow {
+        animation: pulseFlow 25s linear infinite;
+    }
+    .mindmap-branches-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1.25rem;
+        position: relative;
+        z-index: 2;
+    }
+    @media (max-width: 900px) {
+        .mindmap-branches-row {
+            grid-template-columns: 1fr;
+        }
+    }
+    .mindmap-branch-card {
+        background: rgba(255, 255, 255, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        border-radius: 14px;
+        padding: 1.5rem 1.35rem;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .mindmap-branch-card:hover {
+        background: rgba(255, 255, 255, 0.7);
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(61, 111, 158, 0.12), 0 0 16px rgba(189, 251, 255, 0.3);
+        border-color: rgba(156, 207, 233, 0.85);
+    }
+    .branch-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.6rem;
+    }
+    .branch-num-chip {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.72rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #3d6f9e 0%, #20768e 50%, #0e7d8c 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: 0.05em;
+    }
+    .branch-layer-tag {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: #6e6c66;
+        background: rgba(0, 0, 0, 0.04);
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+    .branch-card-title {
+        font-family: var(--font-display);
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #16332a;
+        margin-bottom: 0.5rem;
+    }
+    .branch-card-desc {
+        font-size: 0.84rem;
+        line-height: 1.55;
+        color: #4a5952;
+        margin-bottom: 1.25rem;
+    }
+    .mindmap-satellite-group {
+        border-top: 1px dashed rgba(61, 111, 158, 0.2);
+        padding-top: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+    }
+    .mindmap-leaf {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--font-sans);
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #2c5a4b;
+        background: rgba(255, 255, 255, 0.5);
+        border: 1px solid rgba(220, 230, 235, 0.8);
+        padding: 6px 10px;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+    .mindmap-leaf:hover {
+        background: #ffffff;
+        color: #0e7d8c;
+        border-color: #9ccfe9;
+        transform: translateX(3px);
+    }
+    .leaf-node-icon {
+        color: #20768e;
+        font-size: 0.85rem;
+        line-height: 1;
+    }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -901,6 +1614,17 @@ def _on_fn_change():
             st.session_state["sb_scenario"] = meta["scenario_key"]
     _reset_copilot_and_sim()
 
+def _format_scenario_label(key: str) -> str:
+    s_data = SCENARIOS.get(key, {})
+    if not s_data:
+        return key
+    num = key.split(".")[0].strip()
+    if "(" in key and ")" in key:
+        scen_title = key.split("(")[1].split(")")[0].strip()
+    else:
+        scen_title = s_data.get("function", "")
+    return f"{num}. {scen_title}"
+
 orchestrator = GovernanceOrchestrator()
 
 # ──────────────────────────────────────────────────────────────
@@ -911,6 +1635,7 @@ with st.sidebar:
     scenario_choice = st.selectbox(
         "Benchmark scenario",
         options=list(SCENARIOS.keys()),
+        format_func=_format_scenario_label,
         key="sb_scenario",
         on_change=_on_scenario_change,
         label_visibility="collapsed"
@@ -940,17 +1665,7 @@ with st.sidebar:
         key="sb_pr_id"
     )
 
-    st.markdown('<div style="height:14px;"></div>', unsafe_allow_html=True)
-    st.markdown('<div class="pplx-card-label" style="margin-bottom:8px;">ACTIONS</div>', unsafe_allow_html=True)
 
-    run_sim = st.button("Run Governance Simulation", type="primary", use_container_width=True)
-    reset_db = st.button("Reset Graph Database", type="secondary", use_container_width=True)
-
-    if reset_db:
-        with st.spinner("Restoring FalkorDB graphs..."):
-            seed.seed_all()
-        st.toast("Graphs restored from company.json")
-        st.rerun()
 
 # Dynamic scenario summary lookup
 matched_scenario = None
@@ -965,10 +1680,10 @@ else:
     scenario_summary = f"Pull request {pr_id} evaluating architectural changes in {selected_fn}() within repository {tenant}."
 
 # ──────────────────────────────────────────────────────────────
-# 6. Run Simulation (auto-run on first load or when button clicked)
+# 6. Run Simulation (auto-run on first load or when parameters change)
 # ──────────────────────────────────────────────────────────────
 current_key = f"{tenant}_{selected_fn}_{pr_id}"
-if "sim_data" not in st.session_state or st.session_state.get("sim_key") != current_key or run_sim:
+if "sim_data" not in st.session_state or st.session_state.get("sim_key") != current_key:
     with st.spinner("Reading FalkorDB memory graphs\u2026"):
         st.session_state["sim_data"] = orchestrator.simulate_pr(pr_id=pr_id, target_function=selected_fn, repo=tenant)
         st.session_state["sim_key"] = current_key
@@ -991,8 +1706,8 @@ with st.container(key="nexus_top_bar"):
         st.markdown("""
         <div style="display: flex; flex-direction: column; gap: 3px;">
             <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-family: var(--font-display); font-size: 1.4rem; font-weight: 800; color: #1e1c16; letter-spacing: -0.035em; line-height: 1;">Nexus<span style="color: var(--color-deep-teal);">Guard</span></span>
-                <span style="font-family: var(--font-display); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-deep-teal); background: rgba(1, 106, 113, 0.09); border: 1px solid rgba(1, 106, 113, 0.22); padding: 2px 7px; border-radius: 4px; display: inline-block;">GRAPH ENGINE</span>
+                <span style="font-family: var(--font-display); font-size: 1.4rem; font-weight: 800; color: #1e1c16; letter-spacing: -0.035em; line-height: 1;">Nexus<span style="background: linear-gradient(90deg, #3d6f9e 0%, #20768e 50%, #0e7d8c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Guard</span></span>
+                <span style="font-family: var(--font-display); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #1a4f63; background: rgba(156, 207, 233, 0.15); border: 1px solid rgba(156, 207, 233, 0.45); padding: 2px 7px; border-radius: 4px; display: inline-block;">GRAPH ENGINE</span>
             </div>
             <span style="font-family: var(--font-sans); font-size: 0.75rem; font-weight: 500; color: #6e6c66; line-height: 1.2;">Graph-backed governance for pull requests</span>
         </div>
@@ -1076,28 +1791,6 @@ def _distill_why(sim_dict: dict, fn_name: str) -> str:
 # ╚══════════════════════════════════════════════════════════════╝
 if st.session_state["nav_section"] == "overview":
 
-    # ── Card A: Hero / "What is this?" ──
-    st.markdown(textwrap.dedent(f"""
-    <div class="pplx-card">
-        <div class="pplx-card-label" style="color: var(--color-deep-teal);">GOVERNANCE OBJECTIVE</div>
-        <div style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; color: #1e1c16; margin-bottom: 8px;">What this does</div>
-        <div style="font-size: 0.9375rem; color: var(--color-ink); line-height: 1.6; margin-bottom: 12px;">
-            NexusGuard reviews pull requests against a FalkorDB knowledge graph:
-            who really owns this code, what broke before, and what promises
-            were made about it.
-        </div>
-        <div style="font-size: 0.875rem; color: var(--color-ink); margin-bottom: 4px;">
-            ● Currently evaluating&ensp;
-            <code>{pr_id}</code> &rarr; <code>{selected_fn}()</code>
-            in <code>{tenant}</code>
-        </div>
-        <div style="font-size: 0.8125rem; color: var(--color-graphite); line-height: 1.5;">
-            {scenario_summary}
-        </div>
-    </div>
-    """).strip(), unsafe_allow_html=True)
-
-    # ── Card B: Governance Verdict ──
     dec = sim["decision"]
     risk = sim["risk_level"]
     risk_color = "#b83a2b" if risk == "HIGH" else "#8a6100" if risk == "MEDIUM" else "#016a71"
@@ -1106,52 +1799,387 @@ if st.session_state["nav_section"] == "overview":
     explanation = sim["fixer_action"]["explanation"]
     why_sentence = _distill_why(sim, selected_fn)
 
+    # Memories & Decisions from graph simulation
+    incidents = sim.get("scout_findings", {}).get("memories", {}).get("episodic_memory", {}).get("past_incidents", [])
+    decisions = sim.get("scout_findings", {}).get("decision_chain", {}).get("justifying_decisions", [])
+
+    if incidents:
+        inc = incidents[0]
+        loss_val = inc.get('loss_usd', 0)
+        inc_loss_str = f"${loss_val//1000}K" if loss_val >= 1000 else f"${loss_val}"
+        inc_label = f"{inc.get('incident_id', 'Incident')} ({inc_loss_str})"
+        node3_subtitle = "Critical Repeat Risk"
+    else:
+        inc_label = "Zero Past Outages"
+        node3_subtitle = "Clean Outage History"
+
+    if decisions:
+        dec_obj = decisions[0]
+        promise_label = f"{dec_obj.get('decision_id', 'Policy')} Promise"
+    else:
+        promise_label = "Standard SLA"
+
+    # Stepper dots logic: highlights current scenario in a 4-step sequence
+    active_idx = 0
+    for idx, (k, s_data) in enumerate(SCENARIOS.items()):
+        if s_data["function"] == selected_fn and s_data["tenant"] == tenant:
+            active_idx = idx % 4
+            break
+
+    stepper_dots_html = "".join([
+        '<span class="kindred-dot active"></span>' if i == active_idx else '<span class="kindred-dot"></span>'
+        for i in range(4)
+    ])
+
+    # ── 1. KindRed Hero Section ──
     st.markdown(textwrap.dedent(f"""
-    <div class="pplx-card">
+    <div class="kindred-hero">
+        <div class="kindred-eyebrow kindred-gradient-eyebrow">Autonomous Engineering Governance</div>
+        <h1 class="kindred-title">
+            When pull requests touch mission-critical code, NexusGuard traces <span class="kindred-gradient-title">every promise, outage, and owner.</span>
+        </h1>
+        <p class="kindred-sub">
+            NexusGuard connects code changes to a living FalkorDB knowledge graph — identifying uncodified Slack promises, surfacing historical incident blast radius, and routing reviews to verified code experts before risky code merges.
+        </p>
+    </div>
+    """).strip(), unsafe_allow_html=True)
+
+    # ── 2. Hero CTA Buttons ──
+    _, cta_c1, cta_c2, _ = st.columns([2.6, 2.2, 2.2, 2.6], vertical_alignment="center")
+    with cta_c1:
+        st.markdown('<a href="#verdict-card" class="btn-primary" style="display:inline-flex; width:100%; text-align:center;">Inspect Live Verdict &rarr;</a>', unsafe_allow_html=True)
+    with cta_c2:
+        with st.container(key="hero_cta_graph"):
+            if st.button("Explore FalkorDB Graph", key="btn_hero_explore_graph"):
+                st.session_state["nav_section"] = "graph"
+                st.rerun()
+
+    # ── 3. Domain Telemetry Matrix & Executive Dispatch ──
+    checkout_active = "active-chip" if tenant == "acme_checkout" else ""
+    auth_active = "active-chip" if tenant == "acme_auth" else ""
+    data_active = "active-chip" if tenant == "acme_data" else ""
+    
+    checkout_dot = "status-live" if tenant == "acme_checkout" else ""
+    auth_dot = "status-live" if tenant == "acme_auth" else ""
+    data_dot = "status-live" if tenant == "acme_data" else ""
+
+    telemetry_html = f"""
+    <div class="nexus-telemetry-strip">
+        <div class="telemetry-chip {checkout_active}">
+            <div class="telemetry-top">
+                <span class="telemetry-tag"><span class="material-symbols-outlined" style="font-size:15px; vertical-align:middle;">shopping_cart</span> DOMAIN // CHECKOUT</span>
+                <span class="telemetry-status-dot {checkout_dot}"></span>
+            </div>
+            <div class="telemetry-target"><code>applyDiscount()</code></div>
+            <div class="telemetry-foot">
+                <span class="telemetry-risk-badge badge-danger">OUTAGE RISK</span>
+                <span class="telemetry-stat">$12K INCIDENT I-007</span>
+            </div>
+        </div>
+        <div class="telemetry-chip {auth_active}">
+            <div class="telemetry-top">
+                <span class="telemetry-tag"><span class="material-symbols-outlined" style="font-size:15px; vertical-align:middle;">vpn_key</span> DOMAIN // AUTH</span>
+                <span class="telemetry-status-dot {auth_dot}"></span>
+            </div>
+            <div class="telemetry-target"><code>verifyJwtToken()</code></div>
+            <div class="telemetry-foot">
+                <span class="telemetry-risk-badge badge-warning">POLICY VIOLATION</span>
+                <span class="telemetry-stat">EVICTION LOCK</span>
+            </div>
+        </div>
+        <div class="telemetry-chip {data_active}">
+            <div class="telemetry-top">
+                <span class="telemetry-tag"><span class="material-symbols-outlined" style="font-size:15px; vertical-align:middle;">database</span> DOMAIN // DATA</span>
+                <span class="telemetry-status-dot {data_dot}"></span>
+            </div>
+            <div class="telemetry-target"><code>hardDeleteAccount()</code></div>
+            <div class="telemetry-foot">
+                <span class="telemetry-risk-badge badge-info">LEGAL AUDIT</span>
+                <span class="telemetry-stat">GDPR ART. 17</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="nexus-dispatch-card">
+        <div class="dispatch-header">
+            <div class="dispatch-meta-left">
+                <span class="dispatch-live-beacon"></span>
+                <span class="dispatch-eyebrow">LIVE TELEMETRY &middot; GOVERNANCE DISPATCH</span>
+            </div>
+            <div class="dispatch-meta-right">
+                <span class="dispatch-chip-pr">{pr_id}</span>
+                <span class="dispatch-chip-repo">{tenant}</span>
+            </div>
+        </div>
+        <div class="dispatch-content">
+            <span class="dispatch-prefix">NexusGuard traces</span> <span class="dispatch-fn-badge"><code>{selected_fn}()</code></span> <span class="dispatch-arrow">&rarr;</span> <span class="dispatch-rationale-text">{why_sentence}</span>
+        </div>
+        <div class="dispatch-pipeline-track">
+            <div class="track-stage active"><span class="stage-dot"></span> 01 AST Parse</div>
+            <div class="track-line active"></div>
+            <div class="track-stage active"><span class="stage-dot"></span> 02 Graph Traversal</div>
+            <div class="track-line active"></div>
+            <div class="track-stage active"><span class="stage-dot"></span> 03 Institutional Memory</div>
+            <div class="track-line active"></div>
+            <div class="track-stage active"><span class="stage-dot"></span> 04 Governance Gate</div>
+        </div>
+    </div>
+    """
+    st.markdown(textwrap.dedent(telemetry_html).strip(), unsafe_allow_html=True)
+
+    # ── 4. Animated Architecture Pathway SVG ──
+    verdict_title = dec.replace('_', ' ').title()
+    svg_html = f"""<div class="kindred-scene-card" id="architecture-scene">
+<svg viewBox="0 0 1000 240" width="100%" height="auto" style="display:block;">
+<defs>
+<linearGradient id="gradCelestial1" x1="0%" y1="0%" x2="100%" y2="0%">
+<stop offset="0%" stop-color="#88acd8" />
+<stop offset="50%" stop-color="#9ccfe9" />
+<stop offset="100%" stop-color="#bdfbff" />
+</linearGradient>
+<linearGradient id="gradCelestial2" x1="0%" y1="0%" x2="100%" y2="0%">
+<stop offset="0%" stop-color="#9ccfe9" />
+<stop offset="50%" stop-color="#bdfbff" />
+<stop offset="100%" stop-color="#88acd8" />
+</linearGradient>
+<linearGradient id="gradCelestial3" x1="0%" y1="0%" x2="100%" y2="0%">
+<stop offset="0%" stop-color="#88acd8" />
+<stop offset="50%" stop-color="#9ccfe9" />
+<stop offset="100%" stop-color="#bdfbff" />
+</linearGradient>
+<filter id="glowEffect" x="-25%" y="-25%" width="150%" height="150%">
+<feGaussianBlur stdDeviation="3.5" result="blur" />
+<feComposite in="SourceGraphic" in2="blur" operator="over" />
+</filter>
+</defs>
+<path class="flow-ribbon" d="M140,118 Q260,34 380,118" fill="none" stroke="url(#gradCelestial1)" stroke-width="3.5" filter="url(#glowEffect)" />
+<path class="flow-ribbon" d="M380,118 Q500,202 620,118" fill="none" stroke="url(#gradCelestial2)" stroke-width="3.5" filter="url(#glowEffect)" />
+<path class="flow-ribbon" d="M620,118 Q740,34 860,118" fill="none" stroke="url(#gradCelestial3)" stroke-width="3.5" filter="url(#glowEffect)" />
+<g class="node-token" style="animation-delay: 0s;">
+<circle cx="140" cy="118" r="48" fill="#ffffff" stroke="#88acd8" stroke-width="2.5" />
+<circle cx="140" cy="118" r="39" fill="#f0f5fc" />
+<text x="140" y="109" text-anchor="middle" dominant-baseline="central" font-family="'Plus Jakarta Sans', sans-serif" font-weight="700" font-size="11.5" fill="#3d6f9e">{pr_id}</text>
+<text x="140" y="127" text-anchor="middle" dominant-baseline="central" font-family="'Inter', sans-serif" font-weight="600" font-size="9" fill="#4a5952">Branch Author</text>
+<text x="140" y="184" text-anchor="middle" dominant-baseline="central" font-family="'Plus Jakarta Sans', sans-serif" font-weight="700" font-size="13" fill="#16332a">Pull Request</text>
+<text x="140" y="202" text-anchor="middle" dominant-baseline="central" font-family="'Inter', sans-serif" font-weight="500" font-size="11" fill="#4a5952">Branch commit</text>
+</g>
+<g class="node-token" style="animation-delay: 0.4s;">
+<circle cx="380" cy="118" r="48" fill="#ffffff" stroke="#9ccfe9" stroke-width="2.5" />
+<circle cx="380" cy="118" r="39" fill="#edf7fb" />
+<text x="380" y="109" text-anchor="middle" dominant-baseline="central" font-family="'Plus Jakarta Sans', sans-serif" font-weight="700" font-size="11" fill="#20768e">{selected_fn}()</text>
+<text x="380" y="127" text-anchor="middle" dominant-baseline="central" font-family="'Inter', sans-serif" font-weight="600" font-size="9" fill="#2c5a4b">{tenant}</text>
+<text x="380" y="184" text-anchor="middle" dominant-baseline="central" font-family="'Plus Jakarta Sans', sans-serif" font-weight="700" font-size="13" fill="#16332a">FalkorDB Node</text>
+<text x="380" y="202" text-anchor="middle" dominant-baseline="central" font-family="'Inter', sans-serif" font-weight="500" font-size="11" fill="#4a5952">Call Graph Topology</text>
+</g>
+<g class="node-token" style="animation-delay: 0.8s;">
+<circle cx="620" cy="118" r="48" fill="#ffffff" stroke="{risk_color}" stroke-width="2.5" />
+<circle cx="620" cy="118" r="39" fill="#fdf0ed" />
+<text x="620" y="109" text-anchor="middle" dominant-baseline="central" font-family="'Plus Jakarta Sans', sans-serif" font-weight="700" font-size="10.5" fill="{risk_color}">{inc_label}</text>
+<text x="620" y="127" text-anchor="middle" dominant-baseline="central" font-family="'Inter', sans-serif" font-weight="600" font-size="9" fill="#8a6100">{promise_label}</text>
+<text x="620" y="184" text-anchor="middle" dominant-baseline="central" font-family="'Plus Jakarta Sans', sans-serif" font-weight="700" font-size="13" fill="#16332a">Graph Memory</text>
+<text x="620" y="202" text-anchor="middle" dominant-baseline="central" font-family="'Inter', sans-serif" font-weight="500" font-size="11" fill="{risk_color}">{node3_subtitle}</text>
+</g>
+<g class="node-token" style="animation-delay: 1.2s;">
+<circle cx="860" cy="118" r="48" fill="#ffffff" stroke="#7ecde0" stroke-width="2.5" />
+<circle cx="860" cy="118" r="39" fill="#eaf9fb" />
+<text x="860" y="109" text-anchor="middle" dominant-baseline="central" font-family="'Plus Jakarta Sans', sans-serif" font-weight="700" font-size="11.5" fill="#0e7d8c">{reviewer}</text>
+<text x="860" y="127" text-anchor="middle" dominant-baseline="central" font-family="'Inter', sans-serif" font-weight="600" font-size="9" fill="#0e7d8c">Verified Expert</text>
+<text x="860" y="184" text-anchor="middle" dominant-baseline="central" font-family="'Plus Jakarta Sans', sans-serif" font-weight="700" font-size="13" fill="#16332a">Governance Gate</text>
+<text x="860" y="202" text-anchor="middle" dominant-baseline="central" font-family="'Inter', sans-serif" font-weight="500" font-size="11" fill="#0e7d8c">{verdict_title}</text>
+</g>
+</svg>
+</div>"""
+    st.markdown(svg_html, unsafe_allow_html=True)
+
+    # ── 5. Dark Impact Callout Section ──
+    st.markdown(textwrap.dedent("""
+    <div class="kindred-dark-callout">
+        <div class="dark-callout-title">
+            Most regressions happen in the <span class="kindred-gradient-light">blind spots</span> between teams, Slack promises, and forgotten outages.
+        </div>
+        <div class="dark-callout-body">
+            Codeowners files and static linters only see files on disk. NexusGuard traverses FalkorDB to connect pull requests with 3 vital institutional layers: dependency blast radius, historical incident postmortems, and CEO/security promises made across documentation and communication channels.
+        </div>
+    </div>
+    """).strip(), unsafe_allow_html=True)
+
+    # ── 6. Quantified Impact Grid ──
+    st.markdown(textwrap.dedent("""
+    <div class="kindred-impact-section">
+        <div style="text-align: center; margin-bottom: 1.25rem;">
+            <div class="kindred-eyebrow kindred-gradient-eyebrow">QUANTIFIED GOVERNANCE IMPACT</div>
+            <h2 style="font-family: var(--font-serif); font-size: 2.2rem; font-weight: 400; color: #183b32; margin-top: 6px; letter-spacing: -0.015em;">
+                Measurable prevention before code reaches production
+            </h2>
+        </div>
+        <div class="impact-grid">
+            <div class="impact-stat-card">
+                <div class="impact-number">-$84K</div>
+                <div class="impact-label">Outage Losses Prevented</div>
+                <div class="impact-desc">Recurring discount races and auth eviction incidents blocked across 12 quarters.</div>
+            </div>
+            <div class="impact-stat-card">
+                <div class="impact-number">100%</div>
+                <div class="impact-label">Contractual Promises Kept</div>
+                <div class="impact-desc">Zero regressions on CEO Slack commitments, audit logging, and GDPR requirements.</div>
+            </div>
+            <div class="impact-stat-card">
+                <div class="impact-number">3.2x</div>
+                <div class="impact-label">Faster Review Routing</div>
+                <div class="impact-desc">Direct assignment to verified topological domain experts rather than stale CODEOWNERS.</div>
+            </div>
+            <div class="impact-stat-card">
+                <div class="impact-number">0</div>
+                <div class="impact-label">Blind Merges</div>
+                <div class="impact-desc">Every high-risk pull request requires verified playbook execution and documentation sync.</div>
+            </div>
+        </div>
+    </div>
+    """).strip(), unsafe_allow_html=True)
+
+    # ── 7. Live Governance Verdict Card ──
+    st.markdown(textwrap.dedent(f"""
+    <div class="pplx-card" id="verdict-card">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px;">
             <div>
-                <div class="pplx-card-label" style="color: var(--color-deep-teal);">AUTOMATED DECISION</div>
-                <div style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; color: #1e1c16; margin-bottom: 8px;">Governance Verdict</div>
+                <div class="pplx-card-label" style="color: var(--color-deep-teal);">AUTOMATED DECISION &middot; LIVE VERDICT</div>
+                <div style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; color: #1e1c16; margin-bottom: 8px;">Governance Evaluation: {pr_id}</div>
                 {_verdict_pill(dec)}
             </div>
             <div style="text-align: right;">
                 <div class="pplx-card-label">ASSIGNED REVIEWER</div>
-                <div style="font-family: var(--font-display); font-size: 1rem; font-weight: 700; color: var(--color-deep-teal);">{reviewer}</div>
+                <div style="font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; color: var(--color-deep-teal);">{reviewer}</div>
+                <div style="font-size: 0.75rem; color: #6e6c66;">FalkorDB Verified Expert</div>
             </div>
         </div>
-        <div class="stat-row" style="border-top: 1px solid #f0eee9; padding-top: 10px;">
-            <div><span class="stat-label">Risk:&nbsp;</span><span class="stat-value" style="color: {risk_color};">{risk}</span></div>
-            <div><span class="stat-label">Docs that no longer match the code:&nbsp;</span><span class="stat-value">{len(stale_docs)}</span></div>
+        <div class="stat-row" style="border-top: 1px solid rgba(0, 0, 0, 0.06); padding-top: 12px; margin-top: 8px;">
+            <div><span class="stat-label">Evaluated Function:&nbsp;</span><span class="stat-value"><code>{selected_fn}()</code> ({tenant})</span></div>
+            <div><span class="stat-label">Risk Level:&nbsp;</span><span class="stat-value" style="color: {risk_color}; font-weight: 700;">{risk}</span></div>
+            <div><span class="stat-label">Docs Out of Sync:&nbsp;</span><span class="stat-value">{len(stale_docs)}</span></div>
         </div>
-        <div style="font-size: 0.875rem; color: var(--color-ink); line-height: 1.55; margin-top: 12px;">
-            <strong>Why, in one sentence:</strong> {why_sentence}
+        <div style="font-size: 0.9375rem; color: var(--color-ink); line-height: 1.6; margin-top: 14px; background: rgba(1, 106, 113, 0.05); border-left: 3px solid var(--color-deep-teal); padding: 10px 14px; border-radius: 0 8px 8px 0;">
+            <strong>Core Rationale:</strong> {why_sentence}
         </div>
     </div>
     """).strip(), unsafe_allow_html=True)
 
     # "What happens next" expander
     playbook_steps = sim["fixer_action"]["playbook_steps"]
-    with st.expander("What happens next", expanded=False):
+    with st.expander("Required Playbook Steps Before Merge", expanded=(dec == "BLOCKED")):
         st.markdown(f"**Remediation Directive:** {explanation}")
-        st.markdown("**Required steps before merge:**")
+        st.markdown("**Required playbook steps:**")
         for idx, step in enumerate(playbook_steps, 1):
             st.markdown(f"**{idx}.** {step}")
 
-    # ── Card C: First-visit hint ──
-    if not st.session_state.get("hint_dismissed"):
-        hint_col, btn_col = st.columns([5, 1], vertical_alignment="center")
-        with hint_col:
-            st.markdown("""
-            <div class="hint-card">
-                Use the top navigation to inspect the <strong>Graph</strong>, explore the
-                <strong>Agents</strong> pipeline, or ask questions in the <strong>Copilot</strong>.
-            </div>
-            """, unsafe_allow_html=True)
-        with btn_col:
-            with st.container(key="hint_dismiss"):
-                if st.button("Dismiss", key="dismiss_hint"):
-                    st.session_state["hint_dismissed"] = True
-                    st.rerun()
+    # ── 8. Knowledge Topology: Graph Mindmap Structure ──
+    mindmap_html = """
+    <div style="margin-top: 3.5rem; margin-bottom: 1rem; text-align: center;">
+    <div class="kindred-eyebrow kindred-gradient-eyebrow">GRAPH MINDMAP TOPOLOGY</div>
+    <h2 style="font-family: var(--font-display); font-size: 2.1rem; font-weight: 800; color: #16332a; margin-top: 6px; letter-spacing: -0.02em;">
+    Three Pillars of <span class="kindred-gradient-title">Graph-Backed Governance</span>
+    </h2>
+    <p style="font-size: 0.95rem; color: #5a6e65; max-width: 680px; margin: 8px auto 0 auto; line-height: 1.5;">
+    An interconnected multi-layer institutional graph topology mapping code changes to blast radius, historical incidents, and executive commitments.
+    </p>
+    </div>
+    <div class="nexus-mindmap-canvas">
+    <div class="mindmap-root-hub">
+    <div class="hub-inner-node">
+    <div class="hub-icon">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <polygon points="12,2 22,7.5 22,16.5 12,22 2,16.5 2,7.5" stroke="#20768e" stroke-width="2.2" fill="rgba(156, 207, 233, 0.25)"/>
+    <circle cx="12" cy="12" r="3" fill="#0e7d8c"/>
+    </svg>
+    </div>
+    <div class="hub-info">
+    <span class="hub-badge">CENTRAL ENGINE &middot; FALKORDB</span>
+    <div class="hub-title">Autonomous Code Governance Graph</div>
+    <span class="hub-meta">4,280 Knowledge Entities &middot; Real-Time Cypher Traversal</span>
+    </div>
+    </div>
+    </div>
+    <div class="mindmap-synapse-wrap">
+    <svg viewBox="0 0 1000 65" width="100%" height="65" preserveAspectRatio="none" style="display:block;">
+    <defs>
+    <linearGradient id="synapseBranchL" x1="50%" y1="0%" x2="16%" y2="100%">
+    <stop offset="0%" stop-color="#9ccfe9"/>
+    <stop offset="100%" stop-color="#3d6f9e"/>
+    </linearGradient>
+    <linearGradient id="synapseBranchC" x1="50%" y1="0%" x2="50%" y2="100%">
+    <stop offset="0%" stop-color="#9ccfe9"/>
+    <stop offset="100%" stop-color="#20768e"/>
+    </linearGradient>
+    <linearGradient id="synapseBranchR" x1="50%" y1="0%" x2="84%" y2="100%">
+    <stop offset="0%" stop-color="#9ccfe9"/>
+    <stop offset="100%" stop-color="#0e7d8c"/>
+    </linearGradient>
+    </defs>
+    <path d="M500,0 C500,35 166,20 166,65" fill="none" stroke="url(#synapseBranchL)" stroke-width="2.5" stroke-dasharray="6,4" class="synapse-flow"/>
+    <line x1="500" y1="0" x2="500" y2="65" stroke="#20768e" stroke-width="2.8" stroke-dasharray="6,4" class="synapse-flow"/>
+    <path d="M500,0 C500,35 834,20 834,65" fill="none" stroke="url(#synapseBranchR)" stroke-width="2.5" stroke-dasharray="6,4" class="synapse-flow"/>
+    <circle cx="166" cy="63" r="4" fill="#3d6f9e"/>
+    <circle cx="500" cy="63" r="4" fill="#20768e"/>
+    <circle cx="834" cy="63" r="4" fill="#0e7d8c"/>
+    </svg>
+    </div>
+    <div class="mindmap-branches-row">
+    <div class="mindmap-branch-card">
+    <div>
+    <div class="branch-card-header">
+    <span class="branch-num-chip">BRANCH // 01</span>
+    <span class="branch-layer-tag">AST &middot; DEPENDENCIES</span>
+    </div>
+    <div class="branch-card-title">Topological Blast Radius</div>
+    <div class="branch-card-desc">
+    Traces function call graphs, caller dependencies, and cross-repo downstream blast radius in FalkorDB subgraphs to detect ripple effects.
+    </div>
+    </div>
+    <div class="mindmap-satellite-group">
+    <div class="mindmap-leaf"><span class="leaf-node-icon">&bull;</span> Call Graph Traversal (AST nodes)</div>
+    <div class="mindmap-leaf"><span class="leaf-node-icon">&bull;</span> Cross-Repo Downstream Subgraphs</div>
+    <div class="mindmap-leaf"><span class="leaf-node-icon">&bull;</span> Verified Reviewer Centrality Routing</div>
+    </div>
+    </div>
+    <div class="mindmap-branch-card">
+    <div>
+    <div class="branch-card-header">
+    <span class="branch-num-chip">BRANCH // 02</span>
+    <span class="branch-layer-tag">INCIDENTS &middot; MEMORY</span>
+    </div>
+    <div class="branch-card-title">Episodic Outage Memory</div>
+    <div class="branch-card-desc">
+    Correlates every pull request with historical incident postmortems, root-cause commits, and monetary loss reports to block recurring failure modes.
+    </div>
+    </div>
+    <div class="mindmap-satellite-group">
+    <div class="mindmap-leaf"><span class="leaf-node-icon">&bull;</span> Postmortem Knowledge Edges</div>
+    <div class="mindmap-leaf"><span class="leaf-node-icon">&bull;</span> Root-Cause Commit Fingerprints</div>
+    <div class="mindmap-leaf"><span class="leaf-node-icon">&bull;</span> $84K Recurrent Outage Shield</div>
+    </div>
+    </div>
+    <div class="mindmap-branch-card">
+    <div>
+    <div class="branch-card-header">
+    <span class="branch-num-chip">BRANCH // 03</span>
+    <span class="branch-layer-tag">PROMISES &middot; COMPLIANCE</span>
+    </div>
+    <div class="branch-card-title">Contractual Commitments</div>
+    <div class="branch-card-desc">
+    Extracts uncodified executive promises, Slack architectural decisions, and regulatory policies into persistent graph edges that code cannot bypass.
+    </div>
+    </div>
+    <div class="mindmap-satellite-group">
+    <div class="mindmap-leaf"><span class="leaf-node-icon">&bull;</span> Executive Slack Promises (D-001)</div>
+    <div class="mindmap-leaf"><span class="leaf-node-icon">&bull;</span> GDPR Art. 17 Regulatory Locks</div>
+    <div class="mindmap-leaf"><span class="leaf-node-icon">&bull;</span> Uncodified Decision Graph Edges</div>
+    </div>
+    </div>
+    </div>
+    </div>
+    """
+    clean_mindmap = "\n".join(l.strip() for l in mindmap_html.splitlines() if l.strip())
+    st.markdown(clean_mindmap, unsafe_allow_html=True)
+
 
 
 # ╔══════════════════════════════════════════════════════════════╗
@@ -1347,110 +2375,217 @@ elif st.session_state["nav_section"] == "agents":
     st.markdown("""
     <div class="pplx-card-label" style="color: var(--color-deep-teal);">MULTI-AGENT GOVERNANCE</div>
     <div style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; color: #1e1c16; margin-bottom: 4px;">
-        Autonomous Investigation Pipeline
+        Autonomous Investigation Swarm
     </div>
-    <div style="font-size: 0.8125rem; color: var(--color-graphite); margin-bottom: 16px;">Three specialized agents collaborating across FalkorDB knowledge graphs.</div>
+    <div style="font-size: 0.8125rem; color: var(--color-graphite); margin-bottom: 16px;">
+        Three specialized autonomous agents collaborating over a FalkorDB knowledge blackboard.
+    </div>
     """, unsafe_allow_html=True)
 
     # Build data-driven findings for each agent
     callers = sim["scout_findings"]["blast_radius"].get("callers", [])
     incidents = sim["scout_findings"]["memories"]["episodic_memory"].get("past_incidents", [])
     decisions = sim["scout_findings"]["decision_chain"].get("justifying_decisions", [])
-
-    scout_findings = []
-    scout_findings.append(f"Found {len(callers)} downstream caller{'s' if len(callers) != 1 else ''} in the blast radius")
-    if decisions:
-        scout_findings.append(f"Retrieved decision {decisions[0].get('decision_id', 'N/A')}: {decisions[0].get('summary', '')}")
-    if incidents:
-        scout_findings.append(f"Recalled {len(incidents)} past incident{'s' if len(incidents) != 1 else ''} from memory")
-    else:
-        scout_findings.append("No past incidents found — clean history")
-
-    consolidator_findings = [
-        "Synthesized incident, procedural, and knowledge graph data",
-        f"Verified tenant isolation for {tenant}",
-        "Handed off consolidated findings to the decision-maker"
-    ]
-
     reviewer_name = sim["assigned_reviewer"]
-    fixer_findings = [
-        f"Assigned {reviewer_name} as reviewer based on contribution history",
-        f"Decision: {sim['decision'].replace('_', ' ').title()}",
-        f"Generated {len(sim['fixer_action']['playbook_steps'])} required steps before merge"
+    verdict_name = sim['decision'].replace('_', ' ').title()
+    steps = sim["fixer_action"]["playbook_steps"]
+
+    scout_leaves = [
+        f"Found {len(callers)} downstream caller{'s' if len(callers) != 1 else ''} in blast radius",
+    ]
+    if decisions:
+        dec_label = f"Decision {decisions[0].get('decision_id', 'N/A')}: {decisions[0].get('summary', '')[:60]}..."
+        scout_leaves.append(dec_label)
+    else:
+        scout_leaves.append("Retrieved baseline enterprise SLA policy")
+
+    if incidents:
+        scout_leaves.append(f"Recalled {len(incidents)} historical outage{'s' if len(incidents) != 1 else ''} from memory")
+    else:
+        scout_leaves.append("Zero past outages &mdash; clean historical record")
+
+    consolidator_leaves = [
+        "Synthesized incident, procedural, and topology subgraphs",
+        f"Verified tenant isolation boundaries for {tenant}",
+        "Committed unified evidence token to FalkorDB blackboard"
     ]
 
-    # Pipeline strip: three cards with arrows
-    p1, a1, p2, a2, p3 = st.columns([3, 0.4, 3, 0.4, 3], vertical_alignment="center")
+    fixer_leaves = [
+        f"Assigned {reviewer_name} based on author expertise centrality",
+        f"Governance Gate: {verdict_name} ({sim['risk_level']} risk)",
+        f"Generated {len(steps)} mandatory pre-merge playbook steps"
+    ]
 
-    with p1:
-        findings_html = "".join([f'<div class="trace-step"><div class="trace-step-desc">{f}</div></div>' for f in scout_findings])
-        st.markdown(textwrap.dedent(f"""
-        <div class="pplx-card">
-            <div class="pplx-card-label" style="color: var(--color-deep-teal); font-weight: 800;">STAGE 1 &middot; SCOUT</div>
-            <div style="font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; color: #1e1c16; margin-bottom: 6px;">Detective</div>
-            {findings_html}
-        </div>
-        """).strip(), unsafe_allow_html=True)
+    scout_leaves_html = "".join([f'<div class="mindmap-leaf"><span class="leaf-node-icon">&bull;</span> {leaf}</div>' for leaf in scout_leaves])
+    consolidator_leaves_html = "".join([f'<div class="mindmap-leaf"><span class="leaf-node-icon">&bull;</span> {leaf}</div>' for leaf in consolidator_leaves])
+    fixer_leaves_html = "".join([f'<div class="mindmap-leaf"><span class="leaf-node-icon">&bull;</span> {leaf}</div>' for leaf in fixer_leaves])
 
-    with a1:
-        st.markdown('<div class="pipeline-arrow">&rarr;</div>', unsafe_allow_html=True)
-
-    with p2:
-        findings_html = "".join([f'<div class="trace-step"><div class="trace-step-desc">{f}</div></div>' for f in consolidator_findings])
-        st.markdown(textwrap.dedent(f"""
-        <div class="pplx-card">
-            <div class="pplx-card-label" style="color: var(--color-deep-teal); font-weight: 800;">STAGE 2 &middot; CONSOLIDATOR</div>
-            <div style="font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; color: #1e1c16; margin-bottom: 6px;">Memory Librarian</div>
-            {findings_html}
-        </div>
-        """).strip(), unsafe_allow_html=True)
-
-    with a2:
-        st.markdown('<div class="pipeline-arrow">&rarr;</div>', unsafe_allow_html=True)
-
-    with p3:
-        findings_html = "".join([f'<div class="trace-step"><div class="trace-step-desc">{f}</div></div>' for f in fixer_findings])
-        st.markdown(textwrap.dedent(f"""
-        <div class="pplx-card">
-            <div class="pplx-card-label" style="color: var(--color-deep-teal); font-weight: 800;">STAGE 3 &middot; FIXER</div>
-            <div style="font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; color: #1e1c16; margin-bottom: 6px;">Decision-Maker</div>
-            {findings_html}
-        </div>
-        """).strip(), unsafe_allow_html=True)
-
-    # ── Memory Cards (two columns) ──
-    m1, m2 = st.columns(2)
-
-    with m1:
-        inc_html = ""
-        if incidents:
-            for inc in incidents:
-                inc_html += f'<div style="margin-bottom: 10px;"><div style="font-size: 0.875rem; font-weight: 500; color: var(--color-risk-red);">{inc["incident_id"]} <span style="font-size: 0.75rem; color: var(--color-graphite);">({inc.get("date", "N/A")})</span> &bull; ${inc.get("loss_usd", 0):,} loss</div><div style="font-size: 0.8125rem; color: var(--color-graphite); line-height: 1.4; margin-top: 2px;">{inc.get("summary")}</div></div>'
-        else:
-            inc_html = '<div style="font-size: 0.85rem; color: var(--color-deep-teal);">No past incidents recorded for this function — a clean history.</div>'
-
-        st.markdown(textwrap.dedent(f"""
-        <div class="pplx-card">
-            <div class="pplx-card-label">Past incidents this code caused</div>
-            <div style="font-size: 0.8125rem; color: var(--color-graphite); margin-bottom: 10px;">
-                NexusGuard remembers outages across restarts — this is FalkorDB, not a chat history.
+    # Incident leaves
+    if incidents:
+        inc_items_html = ""
+        for inc in incidents:
+            loss_val = inc.get("loss_usd", 0)
+            loss_fmt = f"${loss_val//1000}K" if loss_val >= 1000 else f"${loss_val}"
+            inc_items_html += f'''
+            <div class="mindmap-leaf" style="flex-direction: column; align-items: flex-start; gap: 4px; padding: 8px 12px;">
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                    <span style="font-weight: 700; color: #b83a2b;">{inc["incident_id"]} &middot; {loss_fmt} loss</span>
+                    <span style="font-size: 0.72rem; color: #6e6c66;">{inc.get("date", "N/A")}</span>
+                </div>
+                <div style="font-size: 0.76rem; color: #4a5952; line-height: 1.4; font-weight: 400;">{inc.get("summary")}</div>
             </div>
-            {inc_html}
+            '''
+    else:
+        inc_items_html = '''
+        <div class="mindmap-leaf" style="color: #0e7d8c; padding: 10px 14px;">
+            <span class="leaf-node-icon">&bull;</span> No prior regressions linked to this function &mdash; clean historical graph record.
         </div>
-        """).strip(), unsafe_allow_html=True)
+        '''
 
-    with m2:
-        steps = sim["fixer_action"]["playbook_steps"]
-        steps_html = "".join([f'<div style="font-size: 0.8125rem; color: var(--color-ink); margin-bottom: 8px;"><span style="color: var(--color-deep-teal); font-weight: 600;">[{idx}]</span> {step}</div>' for idx, step in enumerate(steps, 1)])
-        st.markdown(textwrap.dedent(f"""
-        <div class="pplx-card">
-            <div class="pplx-card-label">Required steps before merge</div>
-            <div style="font-size: 0.8125rem; color: var(--color-graphite); margin-bottom: 10px;">
-                Mandatory checklist generated from playbook and incident memory.
+    # Playbook steps
+    steps_items_html = "".join([
+        f'''<div class="mindmap-leaf" style="gap: 10px; padding: 8px 12px;">
+            <span style="font-family: \'JetBrains Mono\', monospace; font-size: 0.72rem; font-weight: 700; color: #20768e; background: rgba(156,207,233,0.25); padding: 2px 6px; border-radius: 4px;">[{idx:02d}]</span>
+            <span style="font-weight: 500; font-size: 0.78rem; line-height: 1.4;">{step}</span>
+        </div>'''
+        for idx, step in enumerate(steps, 1)
+    ])
+
+    agents_mindmap_html = f"""
+    <div class="nexus-mindmap-canvas" style="margin-top: 10px;">
+        <div class="mindmap-root-hub">
+            <div class="hub-inner-node">
+                <div class="hub-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                        <polygon points="12,2 22,7.5 22,16.5 12,22 2,16.5 2,7.5" stroke="#20768e" stroke-width="2.2" fill="rgba(156, 207, 233, 0.25)"/>
+                        <circle cx="12" cy="12" r="3" fill="#0e7d8c"/>
+                    </svg>
+                </div>
+                <div class="hub-info">
+                    <span class="hub-badge">AUTONOMOUS BLACKBOARD &middot; FALKORDB</span>
+                    <div class="hub-title">Tri-Agent Governance Swarm</div>
+                    <span class="hub-meta">Decentralized Agent Tokens &middot; AST Traversal &middot; Consensus Protocol</span>
+                </div>
             </div>
-            <div style="margin-top: 8px;">{steps_html}</div>
         </div>
-        """).strip(), unsafe_allow_html=True)
+
+        <div class="mindmap-synapse-wrap">
+            <svg viewBox="0 0 1000 65" width="100%" height="65" preserveAspectRatio="none" style="display:block;">
+                <defs>
+                    <linearGradient id="agentBranchL" x1="50%" y1="0%" x2="16%" y2="100%">
+                        <stop offset="0%" stop-color="#9ccfe9"/>
+                        <stop offset="100%" stop-color="#3d6f9e"/>
+                    </linearGradient>
+                    <linearGradient id="agentBranchR" x1="50%" y1="0%" x2="84%" y2="100%">
+                        <stop offset="0%" stop-color="#9ccfe9"/>
+                        <stop offset="100%" stop-color="#0e7d8c"/>
+                    </linearGradient>
+                </defs>
+                <path d="M500,0 C500,35 166,20 166,65" fill="none" stroke="url(#agentBranchL)" stroke-width="2.5" stroke-dasharray="6,4" class="synapse-flow"/>
+                <line x1="500" y1="0" x2="500" y2="65" stroke="#20768e" stroke-width="2.8" stroke-dasharray="6,4" class="synapse-flow"/>
+                <path d="M500,0 C500,35 834,20 834,65" fill="none" stroke="url(#agentBranchR)" stroke-width="2.5" stroke-dasharray="6,4" class="synapse-flow"/>
+                <circle cx="166" cy="63" r="4" fill="#3d6f9e"/>
+                <circle cx="500" cy="63" r="4" fill="#20768e"/>
+                <circle cx="834" cy="63" r="4" fill="#0e7d8c"/>
+            </svg>
+        </div>
+
+        <div class="mindmap-branches-row">
+            <div class="mindmap-branch-card">
+                <div>
+                    <div class="branch-card-header">
+                        <span class="branch-num-chip">STAGE // 01</span>
+                        <span class="branch-layer-tag">AST &middot; RECON</span>
+                    </div>
+                    <div class="branch-card-title">Scout (Detective)</div>
+                    <div class="branch-card-desc">
+                        Traverses callers in FalkorDB to compute blast radius, loads executive decision chains, and recalls episodic incident postmortems.
+                    </div>
+                </div>
+                <div class="mindmap-satellite-group">
+                    {scout_leaves_html}
+                </div>
+            </div>
+
+            <div class="mindmap-branch-card">
+                <div>
+                    <div class="branch-card-header">
+                        <span class="branch-num-chip">STAGE // 02</span>
+                        <span class="branch-layer-tag">FUSION &middot; ISOLATION</span>
+                    </div>
+                    <div class="branch-card-title">Consolidator (Librarian)</div>
+                    <div class="branch-card-desc">
+                        Fuses disparate knowledge layers into a cohesive risk topology and guarantees cross-repo tenant boundary enforcement.
+                    </div>
+                </div>
+                <div class="mindmap-satellite-group">
+                    {consolidator_leaves_html}
+                </div>
+            </div>
+
+            <div class="mindmap-branch-card">
+                <div>
+                    <div class="branch-card-header">
+                        <span class="branch-num-chip">STAGE // 03</span>
+                        <span class="branch-layer-tag">POLICY &middot; VERDICT</span>
+                    </div>
+                    <div class="branch-card-title">Fixer (Decision-Maker)</div>
+                    <div class="branch-card-desc">
+                        Evaluates expertise centrality to assign verified reviewers, renders gate verdicts, and compiles mandatory pre-merge playbooks.
+                    </div>
+                </div>
+                <div class="mindmap-satellite-group">
+                    {fixer_leaves_html}
+                </div>
+            </div>
+        </div>
+
+        <div class="mindmap-synapse-wrap" style="height: 55px; margin-top: 14px;">
+            <svg viewBox="0 0 1000 55" width="100%" height="55" preserveAspectRatio="none" style="display:block;">
+                <path d="M280,0 C280,28 320,25 320,55" fill="none" stroke="#b83a2b" stroke-width="2.2" stroke-dasharray="6,4" class="synapse-flow"/>
+                <path d="M720,0 C720,28 680,25 680,55" fill="none" stroke="#0e7d8c" stroke-width="2.2" stroke-dasharray="6,4" class="synapse-flow"/>
+                <circle cx="320" cy="53" r="3.5" fill="#b83a2b"/>
+                <circle cx="680" cy="53" r="3.5" fill="#0e7d8c"/>
+            </svg>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; position: relative; z-index: 2;">
+            <div class="mindmap-branch-card" style="border-top: 3px solid rgba(184, 58, 43, 0.7);">
+                <div>
+                    <div class="branch-card-header">
+                        <span class="branch-num-chip" style="color: #b83a2b;">MEMORY // 04</span>
+                        <span class="branch-layer-tag">POSTMORTEM RECALL</span>
+                    </div>
+                    <div class="branch-card-title">Past Incidents Caused by This Code</div>
+                    <div class="branch-card-desc">
+                        NexusGuard remembers outages across quarters from persistent FalkorDB memory — protecting against recurring blind spots.
+                    </div>
+                </div>
+                <div class="mindmap-satellite-group">
+                    {inc_items_html}
+                </div>
+            </div>
+
+            <div class="mindmap-branch-card" style="border-top: 3px solid rgba(14, 125, 140, 0.7);">
+                <div>
+                    <div class="branch-card-header">
+                        <span class="branch-num-chip" style="color: #0e7d8c;">PLAYBOOK // 05</span>
+                        <span class="branch-layer-tag">GATE COMPLIANCE</span>
+                    </div>
+                    <div class="branch-card-title">Required Steps Before Merge</div>
+                    <div class="branch-card-desc">
+                        Mandatory mitigation checklist dynamically compiled by the Fixer agent from incident memory and organizational policies.
+                    </div>
+                </div>
+                <div class="mindmap-satellite-group">
+                    {steps_items_html}
+                </div>
+            </div>
+        </div>
+    </div>
+    """
+    clean_agents_mindmap = "\n".join(l.strip() for l in agents_mindmap_html.splitlines() if l.strip())
+    st.markdown(clean_agents_mindmap, unsafe_allow_html=True)
 
     # ── Advanced expander: how agents coordinate (§5.3) ──
     with st.expander("How agents coordinate (advanced)", expanded=False):
@@ -1516,6 +2651,7 @@ elif st.session_state["nav_section"] == "copilot":
     st.selectbox(
         "Active Scenario",
         options=list(SCENARIOS.keys()),
+        format_func=_format_scenario_label,
         index=curr_scen_idx,
         key="copilot_scen_switcher",
         on_change=_on_copilot_scen_change,
@@ -1886,6 +3022,66 @@ components.html("""
         requestAnimationFrame(animate);
     }
     requestAnimationFrame(animate);
+
+    // 4. Smooth Scrolling & Tab Navigation Coordinator
+    function getScrollTarget() {
+        return parentDoc.querySelector('[data-testid="stAppViewContainer"]') 
+            || parentDoc.querySelector('section.main') 
+            || parentDoc.querySelector('.main') 
+            || parentWin;
+    }
+
+    function setupSmoothScrolling() {
+        const navButtons = parentDoc.querySelectorAll('div[class*="st-key-nexus_top_bar"] button');
+        navButtons.forEach(btn => {
+            if (!btn.dataset.smoothScrollBound) {
+                btn.dataset.smoothScrollBound = "true";
+                btn.addEventListener('click', () => {
+                    const target = getScrollTarget();
+                    if (target && target.scrollTo) {
+                        target.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                });
+            }
+        });
+
+        // Intercept in-page anchor links (e.g. Inspect Live Verdict -> #verdict-card)
+        parentDoc.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            if (!anchor.dataset.smoothAnchorBound) {
+                anchor.dataset.smoothAnchorBound = "true";
+                anchor.addEventListener('click', function(e) {
+                    const targetId = this.getAttribute('href');
+                    if (targetId && targetId.length > 1) {
+                        const el = parentDoc.querySelector(targetId);
+                        if (el) {
+                            e.preventDefault();
+                            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    setupSmoothScrolling();
+    setInterval(setupSmoothScrolling, 750);
+
+    // Detect tab changes across reruns and execute smooth scroll to top
+    try {
+        const activeBtn = parentDoc.querySelector('div[class*="st-key-nexus_top_bar"] button[kind="primary"] p')
+            || parentDoc.querySelector('div[class*="st-key-nexus_top_bar"] button[data-testid="stBaseButton-primary"] p');
+        const curNav = activeBtn ? activeBtn.textContent.trim().toLowerCase() : '';
+        if (curNav) {
+            const prevNav = parentWin.sessionStorage.getItem('nexus_active_tab');
+            if (prevNav && prevNav !== curNav) {
+                const target = getScrollTarget();
+                if (target && target.scrollTo) {
+                    target.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            }
+            parentWin.sessionStorage.setItem('nexus_active_tab', curNav);
+        }
+    } catch(err) {}
 })();
 </script>
 """, height=0)
