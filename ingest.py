@@ -9,7 +9,7 @@ that ``seed.py`` already understands -- no graph schema changes required:
     integration_mapping.json   bridge from raw Slack/Jira ids to internal graph ids
     compliance_rules.json      optional override of inline compliance_critical flags
 
-Contracts and examples: ``docs/json_contracts.md`` and ``docs/examples/``.
+Contracts and examples: ``docs/examples/``.
 This module is dependency-free (stdlib only) and does not touch FalkorDB, so the
 normalizers can be unit-tested without a running database (see ``test_ingest.py``).
 """

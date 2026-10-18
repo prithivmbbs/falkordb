@@ -1,6 +1,6 @@
 """Scenario regression tests for the NexusGuard backend (rev1 backend-parity).
 
-Verifies the 8 benchmark scenarios documented in README.md / walkthrough.md produce the
+Verifies the 8 benchmark scenarios documented in README.md produce the
 expected governance verdicts, plus the rev1 parity fixes:
 
 - Fix 0: risk severity -> governance decision mapping (8 scenario decisions)

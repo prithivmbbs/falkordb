@@ -253,7 +253,7 @@ python seed.py --input syn_data_sets/medtech/company.json
 python seed.py --input unseen/company_unseen.json
 ```
 
-See [`docs/json_contracts.md`](docs/json_contracts.md) for full JSON schema contracts for `company.json`, `slack_export.json`, `jira_export.json`, and `compliance_rules.json`.
+See [`docs/examples/`](docs/examples/) for sample JSON schema configurations for `company.json`, `slack_export.json`, `jira_export.json`, and `compliance_rules.json`.
 
 ---
 
@@ -404,8 +404,7 @@ Interactive OpenAPI Swagger docs available at **`http://localhost:8000/docs`**.
 | [`company.json`](company.json) | Enriched reference dataset (13 engineers, 20 functions, 9 PRs, 8 Slack, 6 incidents, 6 playbooks) |
 | [`syn_data_sets/`](syn_data_sets/) | Generalized synthetic datasets across Fintech, Medtech, and Minimal topologies |
 | [`unseen/`](unseen/) | Completely unseen enterprise company holdout dataset for validation |
-| [`docs/json_contracts.md`](docs/json_contracts.md) | Authoritative input specification for onboarding any new company |
-| [`walkthrough.md`](walkthrough.md) | Comprehensive 3-minute pitch and demo walkthrough guide |
+| [`docs/examples/`](docs/examples/) | Sample JSON configurations for onboarding any new company |
 
 ---
 
