@@ -38,7 +38,13 @@ def client():
     # 1. Direct connection URL support (e.g. falkor://default:pass@host:port or falkors://)
     url = _get_config("FALKORDB_URL", _get_config("FALKOR_URL"))
     if url:
-        return FalkorDB.from_url(url)
+        return FalkorDB.from_url(
+            url,
+            ssl_cert_reqs="none",
+            ssl_check_hostname=False,
+            socket_timeout=15.0,
+            socket_connect_timeout=15.0
+        )
 
     # 2. Key-value credentials
     host = _get_config("FALKOR_HOST", _get_config("FALKORDB_HOST", "localhost"))
@@ -51,7 +57,12 @@ def client():
         "host": host,
         "port": port,
         "ssl": ssl_flag,
+        "socket_timeout": 15.0,
+        "socket_connect_timeout": 15.0,
     }
+    if ssl_flag:
+        kwargs["ssl_cert_reqs"] = "none"
+        kwargs["ssl_check_hostname"] = False
     if username:
         kwargs["username"] = username
     if password:
